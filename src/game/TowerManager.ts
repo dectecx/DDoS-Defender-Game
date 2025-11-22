@@ -2,6 +2,7 @@ import { type Tower, TowerType, type Enemy } from './types';
 import { GridManager } from './GridManager';
 import { EnemyManager } from './EnemyManager';
 import { ProjectileManager } from './ProjectileManager';
+import { ExperienceSystem } from './systems/ExperienceSystem';
 
 /**
  * TowerManager - Tower manager
@@ -30,52 +31,26 @@ export class TowerManager {
    * @param type Tower type
    */
   addTower(x: number, y: number, type: TowerType) {
-    let range = 3;
-    let damage = 20;
-    let cooldown = 500;
-    let cost = 100;
-
-    // Set tower attributes based on type
-    switch (type) {
-      case TowerType.WAF: // AOE
-        range = 2;
-        damage = 10;
-        cooldown = 1000;
-        cost = 200;
-        break;
-      case TowerType.DPI: // Sniper (High damage)
-        range = 6;
-        damage = 100;
-        cooldown = 2000;
-        cost = 300;
-        break;
-      case TowerType.CACHE: // Slow (Low damage)
-        range = 3;
-        damage = 5;
-        cooldown = 200;
-        cost = 150;
-        break;
-      case TowerType.RATE_LIMIT:
-      default:
-        range = 3;
-        damage = 20;
-        cooldown = 500;
-        cost = 100;
-        break;
-    }
+    const baseStats = this.getBaseStats(type);
 
     const newTower: Tower = {
       id: crypto.randomUUID(),
-      type: type,
-      x: x,
-      y: y,
-      range: range,
-      damage: damage,
-      cooldown: cooldown,
+      type,
+      x,
+      y,
+      range: baseStats.range,
+      damage: baseStats.damage,
+      cooldown: baseStats.cooldown,
       lastFired: 0,
-      cost: cost,
-      disabledUntil: 0 // 0 means tower is enabled
+      cost: baseStats.cost,
+      disabledUntil: 0,
+      // Experience system (Phase 8)
+      level: 1,
+      exp: 0,
+      maxExp: ExperienceSystem.calculateMaxExp(1),
+      totalInvestment: baseStats.cost
     };
+    
     this.towers.push(newTower);
   }
 
@@ -122,7 +97,6 @@ export class TowerManager {
 
     // Filter enemies in range
     const enemiesInRange = this.enemyManager.enemies.filter((enemy: Enemy) => {
-      if (!enemy.active) return false;
       const dx = enemy.position.x - towerCenter.x;
       const dy = enemy.position.y - towerCenter.y;
       return (dx * dx + dy * dy) <= (rangePx * rangePx);
@@ -136,7 +110,7 @@ export class TowerManager {
         return enemiesInRange.sort((a: Enemy, b: Enemy) => b.hp - a.hp)[0] || null;
     }
 
-    // Default: Prioritize the enemy with the lowest path index
+    // Default: Prioritize the enemy furthest along path
     return enemiesInRange.sort((a: Enemy, b: Enemy) => b.pathIndex - a.pathIndex)[0] || null;
   }
 
@@ -194,6 +168,85 @@ export class TowerManager {
           ctx.fillStyle = '#ff0000';
           ctx.fillText('OFF', pos.x + 15, pos.y + 45);
       }
+      
+      // Level indicator (Phase 8)
+      if (tower.level > 1) {
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 12px monospace';
+        ctx.fillText(`Lv.${tower.level}`, pos.x + 5, pos.y + 15);
+      }
+      
+      // Experience bar (Phase 8)
+      const expPercent = tower.exp / tower.maxExp;
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+      const barWidth = (this.gridManager.cellSize - 10) * expPercent;
+      ctx.fillRect(pos.x + 5, pos.y + this.gridManager.cellSize - 8, barWidth, 3);
     });
+  }
+
+  /**
+   * Get base stats for a tower type
+   * @param type Tower type
+   * @returns Base stats object
+   */
+  getBaseStats(type: TowerType): {
+    range: number;
+    damage: number;
+    cooldown: number;
+    cost: number;
+  } {
+    switch (type) {
+      case TowerType.WAF:
+        return { range: 2, damage: 10, cooldown: 1000, cost: 200 };
+      case TowerType.DPI:
+        return { range: 6, damage: 100, cooldown: 2000, cost: 300 };
+      case TowerType.CACHE:
+        return { range: 3, damage: 5, cooldown: 200, cost: 150 };
+      case TowerType.RATE_LIMIT:
+      default:
+        return { range: 3, damage: 20, cooldown: 500, cost: 100 };
+    }
+  }
+
+  /**
+   * Award experience to a tower (called when it kills an enemy)
+   * @param towerId Tower ID
+   * @param exp Experience amount
+   */
+  awardExperience(towerId: string, exp: number) {
+    const tower = this.towers.find(t => t.id === towerId);
+    if (!tower) return;
+
+    const leveledUp = ExperienceSystem.addExperience(tower, exp);
+    if (leveledUp) {
+      this.recalculateStats(tower);
+      console.log(`Tower ${towerId} leveled up to ${tower.level}!`);
+    }
+  }
+
+  /**
+   * Recalculate tower stats based on current level
+   * @param tower Tower to recalculate
+   */
+  recalculateStats(tower: Tower) {
+    const baseStats = this.getBaseStats(tower.type);
+    
+    tower.damage = ExperienceSystem.calculateStatIncrease(
+      baseStats.damage,
+      tower.level,
+      'damage'
+    );
+    
+    tower.range = ExperienceSystem.calculateStatIncrease(
+      baseStats.range,
+      tower.level,
+      'range'
+    );
+    
+    tower.cooldown = ExperienceSystem.calculateStatIncrease(
+      baseStats.cooldown,
+      tower.level,
+      'cooldown'
+    );
   }
 }

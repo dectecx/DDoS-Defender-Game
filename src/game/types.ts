@@ -42,6 +42,12 @@ export interface Tower {
   lastFired: number; // timestamp
   cost: number;
   disabledUntil: number; // timestamp, 0 if active
+  
+  // Experience & Leveling (Phase 8)
+  level: number;           // Current level (1-10)
+  exp: number;            // Current experience
+  maxExp: number;         // Experience needed for next level
+  totalInvestment: number; // Total gold spent (for sell price)
 }
 
 export interface Enemy {
@@ -49,15 +55,14 @@ export interface Enemy {
   type: EnemyType;
   hp: number;
   maxHp: number;
-  speed: number; // pixels per second
-  pathIndex: number;
+  speed: number;
   position: Position;
-  active: boolean;
-  status: {
-    isSlowed: boolean;
-    slowFactor: number;
-    slowTimer: number;
-  };
+  pathIndex: number;
+  slowedUntil: number; // timestamp
+  
+  // Rewards (Phase 8-9)
+  goldReward: number;  // Gold awarded on kill
+  expReward: number;   // Experience awarded to tower
 }
 
 export interface Cell {
