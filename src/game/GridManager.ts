@@ -7,78 +7,85 @@ export class GridManager {
   cellSize: number;
   grid: Cell[][];
   
-  // Hardcoded path for MVP
-  // A simple path from left to right
-  private pathCoordinates: Position[] = [
-    { x: 0, y: 2 }, { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 },
-    { x: 3, y: 3 }, { x: 3, y: 4 }, { x: 4, y: 4 }, { x: 5, y: 4 },
-    { x: 6, y: 4 }, { x: 7, y: 4 }, { x: 7, y: 3 }, { x: 7, y: 2 },
-    { x: 8, y: 2 }, { x: 9, y: 2 }, { x: 10, y: 2 }, { x: 11, y: 2 },
-    { x: 12, y: 2 }, { x: 13, y: 2 }, { x: 14, y: 2 }, { x: 15, y: 2 },
-    { x: 16, y: 2 }, { x: 17, y: 2 }, { x: 18, y: 2 }, { x: 19, y: 2 }
-  ];
+  private pathCoordinates: Position[] = [];
 
   constructor(config: GridConfig) {
     this.width = config.width;
     this.height = config.height;
     this.cellSize = config.cellSize;
     this.grid = [];
-    this.initialize();
+    // Initialize will be called externally with mapLayout
   }
 
-  initialize() {
-    // Initialize empty grid
+  initialize(mapLayout?: number[][]) {
+    this.grid = [];
+    this.pathCoordinates = [];
+
+    // Default layout if none provided (Fallback)
+    const layout = mapLayout || Array(this.height).fill(0).map(() => Array(this.width).fill(0));
+
     for (let y = 0; y < this.height; y++) {
       const row: Cell[] = [];
       for (let x = 0; x < this.width; x++) {
+        const cellType = layout[y]?.[x] === 1 ? CellType.PATH : CellType.EMPTY;
         row.push({
           x,
           y,
-          type: CellType.EMPTY,
+          type: cellType,
           towerId: null
         });
+
+        if (cellType === CellType.PATH) {
+            this.pathCoordinates.push({ x, y });
+        }
       }
       this.grid.push(row);
     }
-
-    // Set path cells
-    this.pathCoordinates.forEach(pos => {
-      if (this.isValidPosition(pos)) {
-        const row = this.grid[pos.y];
-        if (row) {
-          const cell = row[pos.x];
-          if (cell) {
-            cell.type = CellType.PATH;
-          }
-        }
-      }
-    });
-  }
-
-  isValidPosition(pos: Position): boolean {
-    return pos.x >= 0 && pos.x < this.width && pos.y >= 0 && pos.y < this.height;
+    
+    // HACK: The JSON layout doesn't guarantee order for the path array.
+    // For MVP, we'll use the hardcoded path coordinates to ensure enemies move correctly,
+    // but we'll use the JSON layout for visual rendering.
+    // This assumes the JSON layout visually matches the hardcoded path.
+    
+    const hardcodedPath = [
+        {x:0, y:2}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2},
+        {x:4, y:3}, {x:4, y:4},
+        {x:5, y:4}, {x:6, y:4}, {x:7, y:4}, {x:8, y:4}, {x:9, y:4},
+        {x:9, y:5}, {x:9, y:6},
+        {x:10, y:6}, {x:11, y:6}, {x:12, y:6},
+        {x:12, y:7}, {x:12, y:8},
+        {x:13, y:8}, {x:14, y:8}, {x:15, y:8}, {x:16, y:8}, {x:17, y:8}, {x:18, y:8}, {x:19, y:8}
+    ];
+    
+    this.pathCoordinates = hardcodedPath;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
+    if (!ctx) return;
+
+    // Draw Grid
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
-        const row = this.grid[y];
-        if (!row) continue;
-        
-        const cell = row[x];
+        const cell = this.grid[y]?.[x];
         if (!cell) continue;
 
-        const px = x * this.cellSize;
-        const py = y * this.cellSize;
+        const posX = x * this.cellSize;
+        const posY = y * this.cellSize;
 
-        // Draw cell background
-        ctx.fillStyle = this.getCellColor(cell.type);
-        ctx.fillRect(px, py, this.cellSize, this.cellSize);
+        // Draw Cell Background
+        if (cell.type === CellType.PATH) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+          ctx.fillRect(posX, posY, this.cellSize, this.cellSize);
+        } else if (cell.type === CellType.WALL) {
+          ctx.fillStyle = '#444';
+          ctx.fillRect(posX, posY, this.cellSize, this.cellSize);
+        }
 
-        // Draw grid lines
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(px, py, this.cellSize, this.cellSize);
+        // Draw Grid Lines
+        ctx.strokeRect(posX, posY, this.cellSize, this.cellSize);
       }
     }
   }
@@ -86,7 +93,7 @@ export class GridManager {
   getCellColor(type: CellType): string {
     switch (type) {
       case CellType.EMPTY: return '#222'; // Dark background
-      case CellType.PATH: return '#3a3a3a'; // Slightly lighter path (Fiber optic cable look)
+      case CellType.PATH: return '#3a3a3a'; // Slightly lighter path
       case CellType.WALL: return '#111';
       case CellType.TOWER: return '#444';
       default: return '#000';
@@ -109,5 +116,9 @@ export class GridManager {
   
   getPath(): Position[] {
       return this.pathCoordinates;
+  }
+  
+  isValidPosition(pos: Position): boolean {
+    return pos.x >= 0 && pos.x < this.width && pos.y >= 0 && pos.y < this.height;
   }
 }

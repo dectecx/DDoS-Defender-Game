@@ -1,6 +1,7 @@
 import { EnemyType } from './types';
 import type { Enemy, Position } from './types';
 import { GridManager } from './GridManager';
+import { GameActions } from './GameState';
 
 export class EnemyManager {
   enemies: Enemy[] = [];
@@ -50,53 +51,63 @@ export class EnemyManager {
       speed: speed,
       pathIndex: 0,
       position: { x: startPos.x, y: startPos.y },
-      active: true
+      active: true,
+      status: {
+        isSlowed: false,
+        slowFactor: 1,
+        slowTimer: 0
+      }
     };
 
     this.enemies.push(newEnemy);
   }
 
   update(deltaTime: number) {
-    const path = this.gridManager.getPath();
-    
     this.enemies.forEach(enemy => {
       if (!enemy.active) return;
 
-      // Target the next node in the path
-      const nextNodeIndex = enemy.pathIndex + 1;
-      
-      // If reached end of path
-      if (nextNodeIndex >= path.length) {
+      // Handle Status Effects
+      if (enemy.status.isSlowed) {
+        enemy.status.slowTimer -= deltaTime * 1000;
+        if (enemy.status.slowTimer <= 0) {
+          enemy.status.isSlowed = false;
+          enemy.status.slowFactor = 1;
+        }
+      }
+
+      const path = this.gridManager.getPath();
+      if (enemy.pathIndex >= path.length - 1) {
+        // Reached end
+        console.log('Enemy Reached Base!');
+        GameActions.takeDamage(10);
         enemy.active = false;
-        // TODO: Deal damage to base
-        console.log('Enemy reached base!');
         return;
       }
 
-      const nextNode = path[nextNodeIndex];
-      if (!nextNode) return;
-
-      const targetPos = this.gridManager.getCanvasPosition(nextNode.x, nextNode.y);
+      const targetNode = path[enemy.pathIndex + 1];
+      if (!targetNode) return;
+      const targetPos = this.gridManager.getCanvasPosition(targetNode.x, targetNode.y);
       
       // Move towards target
       const dx = targetPos.x - enemy.position.x;
       const dy = targetPos.y - enemy.position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
-      if (distance < 5) {
-        // Reached the node, snap to it and increment index
+      const currentSpeed = enemy.speed * enemy.status.slowFactor;
+      const moveStep = currentSpeed * deltaTime;
+
+      if (distance < moveStep) {
+        // Reached node
         enemy.position.x = targetPos.x;
         enemy.position.y = targetPos.y;
         enemy.pathIndex++;
       } else {
-        // Normalize and move
-        const moveStep = enemy.speed * deltaTime;
         enemy.position.x += (dx / distance) * moveStep;
         enemy.position.y += (dy / distance) * moveStep;
       }
     });
 
-    // Cleanup inactive enemies
+    // Cleanup
     this.enemies = this.enemies.filter(e => e.active);
   }
 
@@ -118,6 +129,11 @@ export class EnemyManager {
           color = '#800080'; // Purple
           scale = 0.9;
           break;
+      }
+
+      // Visual indicator for Slow
+      if (enemy.status.isSlowed) {
+          color = '#00ffff'; // Cyan tint for slow
       }
 
       ctx.fillStyle = color;

@@ -52,6 +52,11 @@ export interface Enemy {
   pathIndex: number;
   position: Position;
   active: boolean;
+  status: {
+    isSlowed: boolean;
+    slowFactor: number;
+    slowTimer: number;
+  };
 }
 
 export interface Cell {

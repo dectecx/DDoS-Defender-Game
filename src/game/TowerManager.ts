@@ -80,10 +80,7 @@ export class TowerManager {
             y: towerPos.y + this.gridManager.cellSize / 2
         };
         
-        // Special Logic for WAF (AOE) - For now, just spawn a projectile that explodes on impact?
-        // Or instant hit? Let's stick to projectile for consistency, but maybe different color/size.
-        
-        this.projectileManager.spawnProjectile(centerPos, target.id, tower.damage);
+        this.projectileManager.spawnProjectile(centerPos, target, tower.damage);
         tower.lastFired = now;
       }
     });
@@ -114,6 +111,12 @@ export class TowerManager {
 
     // Default: First along path
     return enemiesInRange.sort((a, b) => b.pathIndex - a.pathIndex)[0] || null;
+  }
+
+  disableTower(towerId: string, duration: number) {
+      // TODO: Implement disable logic
+      // For now, just log it
+      console.log(`Tower ${towerId} disabled for ${duration}ms`);
   }
 
   draw(ctx: CanvasRenderingContext2D) {

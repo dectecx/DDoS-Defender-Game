@@ -8,6 +8,7 @@ import { InteractionManager } from '../game/InteractionManager';
 import { WaveManager } from '../game/WaveManager';
 import { gameState } from '../game/GameState';
 import { EnemyType, TowerType } from '../game/types';
+import level1 from '../game/levels/level1.json';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
@@ -109,6 +110,7 @@ onMounted(() => {
     
     // Initialize Systems
     gridManager = new GridManager({ width: 20, height: 12, cellSize: 64 });
+    gridManager.initialize(level1.mapLayout);
     enemyManager = new EnemyManager(gridManager);
     projectileManager = new ProjectileManager(enemyManager);
     towerManager = new TowerManager(gridManager, enemyManager, projectileManager);
