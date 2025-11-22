@@ -1,0 +1,425 @@
+# Development Roadmap & Progress Tracking
+
+## Project Status: MVP Complete ✅ → Full Product In Progress 🚧
+
+Last Updated: 2025-11-22
+
+---
+
+## MVP Status (Phases 1-6) ✅
+
+### Phase 1: Basic Infrastructure ✅
+- [x] Project setup
+- [x] Grid system
+- [x] Enemy movement
+- [x] Game loop
+
+### Phase 2: Gameplay Mechanics ✅
+- [x] Tower placement
+- [x] Projectile system
+- [x] Basic UI
+
+### Phase 3: Content ✅
+- [x] Wave system
+- [x] Enemy types (4)
+- [x] Tower types (4)
+
+### Phase 4: UI & Polish ✅
+- [x] Tower selection
+- [x] Victory/Game over screens
+
+### Phase 5: Advanced Mechanics ✅
+- [x] Map loading from JSON
+- [x] Status effects (Slow)
+- [x] Boss mechanics (Blackout)
+
+### Phase 6: Documentation ✅
+- [x] JSDoc comments (100% coverage)
+- [x] Technical documentation
+- [x] Walkthrough
+
+---
+
+## Full Product Development (Phases 7-13)
+
+### Phase 7: Wave System Enhancement 🔄
+**Priority**: High  
+**Estimated Duration**: 3-5 days  
+**Status**: Planning Complete
+
+#### Tasks
+- [ ] Update wave JSON schema
+  - [ ] Support multiple enemy types per wave
+  - [ ] Implement spawn schedules (interval, burst, custom)
+  - [ ] Add wave timeout configuration
+  
+- [ ] Implement WaveManager enhancements
+  - [ ] Multi-enemy spawning logic
+  - [ ] Spawn schedule parser
+  - [ ] Wave timeout timer
+  
+- [ ] Create Wave Transition UI
+  - [ ] Countdown timer display
+  - [ ] "Next Wave" button
+  - [ ] Bonus gold calculation & display
+  
+- [ ] HP Recovery System
+  - [ ] Detect every 5th wave
+  - [ ] Heal 5 HP (capped at 100)
+  - [ ] Visual feedback
+  
+- [ ] Boss Wave Scheduling
+  - [ ] Every 10th wave = boss
+  - [ ] Boss-specific rewards
+  - [ ] Dramatic entry effects
+
+**Dependencies**: None  
+**Blocked By**: None
+
+---
+
+### Phase 8: Tower Enhancement 🚧
+**Priority**: High  
+**Estimated Duration**: 4-6 days  
+**Status**: Ready to Start
+
+#### Tasks
+- [ ] Tower Upgrade System
+  - [ ] Add level, exp, maxExp to Tower interface
+  - [ ] Implement exp gain on enemy kill
+  - [ ] Level up logic and stat increases
+  - [ ] Visual level indicators
+  
+- [ ] Tower Selling
+  - [ ] Calculate sell price (totalInvestment × 0.7)
+  - [ ] Refund gold on sell
+  - [ ] Remove tower from grid
+  
+- [ ] Tower Info Panel (Vue component)
+  - [ ] Display tower stats
+  - [ ] Show experience bar
+  - [ ] Sell button
+  - [ ] Click tower to open panel
+  
+- [ ] Special Buff Towers
+  - [ ] CODE_FARMER (passive gold income)
+  - [ ] SUPERVISOR (attack speed buff)
+  - [ ] SYSTEM_ANALYST (range buff)
+  - [ ] Buff stacking logic
+  - [ ] Visual buff indicators
+
+**Dependencies**: Phase 7 (for experience rewards)  
+**Blocked By**: None
+
+---
+
+### Phase 9: Enemy System Enhancement 📋
+**Priority**: Medium  
+**Estimated Duration**: 1-2 days  
+**Status**: Ready to Start
+
+#### Tasks
+- [ ] Variable Rewards
+  - [ ] Add goldReward, expReward to Enemy interface
+  - [ ] Update enemy stats in types.ts
+  - [ ] Implement reward distribution on kill
+  
+- [ ] New Enemy Types (Optional)
+  - [ ] SQL_INJECTION enemy
+  - [ ] XSS_ATTACK enemy
+  - [ ] Design special abilities
+
+**Dependencies**: Phase 8 (for exp system)  
+**Blocked By**: None
+
+---
+
+### Phase 10: Grid System Enhancement 📋
+**Priority**: Low  
+**Estimated Duration**: 1-2 days  
+**Status**: Ready to Start
+
+#### Tasks
+- [ ] Blocked Cells
+  - [ ] Add CellType.BLOCKED
+  - [ ] Update GridManager rendering
+  - [ ] Update level JSON with blocked cells (value = 2)
+  - [ ] Prevent tower placement on blocked cells
+  
+- [ ] Spawn & Base Markers
+  - [ ] Create/import spawn icon
+  - [ ] Create/import base icon
+  - [ ] Draw icons at path endpoints
+  - [ ] Visual polish (animations?)
+
+**Dependencies**: None  
+**Blocked By**: None
+
+---
+
+### Phase 11: UI/UX Improvements 📋
+**Priority**: High  
+**Estimated Duration**: 4-5 days  
+**Status**: Planning Complete
+
+#### Tasks
+- [ ] Main Menu
+  - [ ] Create MainMenu.vue component
+  - [ ] Add router configuration
+  - [ ] Design menu layout
+  - [ ] Menu options: Start, Guide, Credits, Settings
+  
+- [ ] Game Guide
+  - [ ] Write guide content (mechanics explanation)
+  - [ ] Create Guide.vue component
+  - [ ] Include tower/enemy descriptions
+  
+- [ ] Pause System
+  - [ ] Pause button in game
+  - [ ] Freeze game loop (set timeScale = 0)
+  - [ ] Semi-transparent overlay
+  - [ ] Resume / Quit buttons
+  
+- [ ] Game Speed Control
+  - [ ] Speed buttons (x1, x2, x3)
+  - [ ] Multiply deltaTime by speed factor
+  - [ ] Visual indicator of current speed
+  
+- [ ] Settings Panel
+  - [ ] Audio volume sliders
+  - [ ] Mute toggles
+  - [ ] Speed presets
+  - [ ] Save settings to localStorage
+
+**Dependencies**: Phase 12 (for audio settings)  
+**Blocked By**: None
+
+---
+
+### Phase 12: Audio System 📋
+**Priority**: Medium  
+**Estimated Duration**: 2-3 days  
+**Status**: Ready to Start
+
+#### Tasks
+- [ ] Audio Manager
+  - [ ] Create AudioManager.ts
+  - [ ] BGM playback system
+  - [ ] SFX playback system
+  - [ ] volume control
+  - [ ] Mute functionality
+  
+- [ ] Sound Effects
+  - [ ] Find/create SFX assets
+  - [ ] tower_fire.mp3
+  - [ ] enemy_death.mp3
+  - [ ] build_tower.mp3
+  - [ ] level_up.mp3
+  - [ ] wave_complete.mp3
+  
+- [ ] Background Music
+  - [ ] Find/create BGM assets
+  - [ ] Main menu music
+  - [ ] Gameplay music
+  - [ ] Boss battle music
+  
+- [ ] Audio Integration
+  - [ ] Hook audio to game events
+  - [ ] Test audio performance
+  - [ ] Implement audio pooling
+
+**Dependencies**: None  
+**Blocked By**: None
+
+---
+
+### Phase 13: Testing & Quality Assurance 🚧
+**Priority**: Ongoing  
+**Estimated Duration**: Throughout development  
+**Status**: Setup Required
+
+#### Tasks
+- [ ] Testing Setup
+  - [ ] Install Vitest
+  - [ ] Configure vitest.config.ts
+  - [ ] Setup test utilities
+  
+- [ ] Unit Tests
+  - [ ] GridManager tests
+  - [ ] TowerManager tests
+  - [ ] WaveManager tests
+  - [ ] ExperienceSystem tests
+  - [ ] BuffSystem tests
+  
+- [ ] Integration Tests
+  - [ ] Tower placement flow
+  - [ ] Wave transition flow
+  - [ ] Experience gain flow
+  
+- [ ] TDD Approach (for new features)
+  - [ ] Write tests first
+  - [ ] Implement minimal code
+  - [ ] Refactor
+  
+- [ ] Code Coverage
+  - [ ] Target: 80%+ coverage
+  - [ ] Setup coverage reporting
+  - [ ] Review uncovered code
+
+**Dependencies**: None  
+**Blocked By**: None
+
+---
+
+## Sprint Planning
+
+### Sprint 1 (Week 1)
+**Focus**: Wave System & Core Tower Enhancements
+
+- [ ] Phase 7: Wave System Enhancement
+- [ ] Phase 8: Tower Upgrade System (partial)
+- [ ] Phase 9: Variable Rewards
+
+**Goal**: Players can experience varied waves and tower progression
+
+---
+
+### Sprint 2 (Week 2)
+**Focus**: Tower Completion & Grid Enhancements
+
+- [ ] Phase 8: Special Buff Towers (complete)
+- [ ] Phase 8: Tower Info Panel
+- [ ] Phase 10: Grid Enhancements
+
+**Goal**: All tower mechanics complete, improved map visuals
+
+---
+
+### Sprint 3 (Week 3)
+**Focus**: UI/UX & Audio
+
+- [ ] Phase 11: Main Menu & Pause
+- [ ] Phase 11: Game Speed & Settings
+- [ ] Phase 12: Audio System (setup)
+
+**Goal**: Professional UI and core audio integration
+
+---
+
+### Sprint 4 (Week 4)
+**Focus**: Audio Completion & Testing
+
+- [ ] Phase 12: Audio Integration (complete)
+- [ ] Phase 13: Unit Tests
+- [ ] Phase 13: Integration Tests
+- [ ] Bug fixing & polish
+
+**Goal**: Production-ready quality with test coverage
+
+---
+
+## Risk Register
+
+| Risk | Impact | Probability | Mitigation |
+|------|--------|-------------|------------|
+| Tower buff system too complex | High | Medium | Start with simple implementation, iterate |
+| Audio impacts performance | Medium | Low | Use audio pooling, lazy loading |
+| Wave balancing too difficult | Medium | High | Extensive playtesting, data-driven tuning |
+| Scope creep | High | Medium | Stick to roadmap, defer nice-to-haves |
+| Technical debt from MVP | Medium | High | Refactor critical paths in Phase 7-8 |
+
+---
+
+## Definition of Done
+
+### Feature Complete
+- [ ] All acceptance criteria met
+- [ ] Code reviewed
+- [ ] Tests written and passing
+- [ ] Documentation updated
+- [ ] No critical bugs
+
+### Phase Complete
+- [ ] All features implemented
+- [ ] Manual testing completed
+- [ ] Performance validated
+- [ ] User feedback incorporated (if applicable)
+
+### Release Ready
+- [ ] All phases complete
+- [ ] 80%+ test coverage
+- [ ] Performance benchmarks met
+- [ ] Cross-browser tested
+- [ ] Build pipeline configured
+
+---
+
+## Metrics & KPIs
+
+### Development Velocity
+- **Target**: 1 phase per week
+- **Current**: Phase 7 (Week 1)
+
+### Code Quality
+- **Test Coverage**: 0% → Target 80%
+- **Linting Errors**: 0
+- **Build Warnings**: 0
+
+### Game Balance
+- **Wave 1-10 Win Rate**: Target 95%+
+- **Wave 20 Win Rate**: Target 70%
+- **Wave 30 Win Rate**: Target 40%
+
+---
+
+## Change Log
+
+### 2025-11-22
+- ✅ Completed MVP (Phases 1-6)
+- 📝 Created full product roadmap
+- 📝 Documented enemy/tower/wave specs
+- 🎯 Ready to start Phase 7
+
+### [Previous Changes]
+- 2025-11-21: Phase 6 complete (Documentation)
+- 2025-11-20: Phase 5 complete (Boss mechanics)
+- 2025-11-19: Phase 4 complete (UI polish)
+- 2025-11-18: Phase 3 complete (Content)
+- 2025-11-17: Phase 2 complete (Gameplay)
+- 2025-11-16: Phase 1 complete (Infrastructure)
+- 2025-11-15: Project initiated
+
+---
+
+## Notes & Decisions
+
+### Architecture Decisions
+- Use Vue reactive for global state (keep it simple)
+- Canvas rendering for game (better performance than DOM)
+- Modular manager pattern (easy to test/maintain)
+- JSON-driven config (data-driven design)
+
+### Design Decisions
+- Focus on strategic depth over mechanical skill
+- Cybersecurity theme for educational value
+- Progressive difficulty (accessible to beginners)
+- Replayability through wave variety
+
+### Deferred Features
+- Save/Load system (Phase 14, post-launch)
+- Multiplayer (Phase 15, post-launch)
+- Multiple maps (Phase 16, post-launch)
+- Achievement system (Phase 17, post-launch)
+
+---
+
+## Team & Responsibilities
+
+### Current Team
+- **Lead Developer**: [Your Name]
+- **AI Assistant**: Gemini (planning, documentation, code generation)
+
+### Contact
+- **Project Repo**: [GitHub Link]
+- **Issue Tracker**: [GitHub Issues]
+- **Documentation**: `/docs` folder
