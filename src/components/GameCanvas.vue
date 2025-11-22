@@ -117,6 +117,9 @@ onMounted(() => {
     interactionManager = new InteractionManager(gridManager);
     waveManager = new WaveManager(enemyManager);
 
+    // Set up circular dependencies (let EnemyManager access TowerManager for Boss skill)
+    enemyManager.setTowerManager(towerManager);
+
     window.addEventListener('resize', resizeCanvas);
     canvasRef.value.addEventListener('click', handleCanvasClick);
     

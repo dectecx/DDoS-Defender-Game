@@ -41,6 +41,7 @@ export interface Tower {
   cooldown: number; // ms
   lastFired: number; // timestamp
   cost: number;
+  disabledUntil: number; // timestamp, 0 if active
 }
 
 export interface Enemy {

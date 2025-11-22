@@ -1,16 +1,33 @@
 import { EnemyType } from './types';
-import type { Enemy, Position } from './types';
+import type { Enemy } from './types';
 import { GridManager } from './GridManager';
 import { GameActions } from './GameState';
+import type { TowerManager } from './TowerManager';
 
+/**
+ * EnemyManager - Enemy manager
+ * Manages enemy generation, movement, state updates, and rendering
+ */
 export class EnemyManager {
   enemies: Enemy[] = [];
   gridManager: GridManager;
-  
+  towerManager: TowerManager | null = null; // For Boss skill, avoid circular dependency
+
   constructor(gridManager: GridManager) {
     this.gridManager = gridManager;
   }
 
+  /**
+   * Set TowerManager reference (for Boss skill)
+   */
+  setTowerManager(tm: TowerManager) {
+      this.towerManager = tm;
+  }
+
+  /**
+   * Spawn an enemy
+   * @param type Enemy type
+   */
   spawnEnemy(type: EnemyType) {
     const path = this.gridManager.getPath();
     if (path.length === 0) return;
@@ -20,6 +37,7 @@ export class EnemyManager {
 
     const startPos = this.gridManager.getCanvasPosition(startNode.x, startNode.y);
 
+    // Set enemy attributes based on type
     let hp = 100;
     let speed = 100;
     
@@ -62,11 +80,15 @@ export class EnemyManager {
     this.enemies.push(newEnemy);
   }
 
+  /**
+   * Update all enemy states
+   * @param deltaTime Time increment (seconds)
+   */
   update(deltaTime: number) {
     this.enemies.forEach(enemy => {
       if (!enemy.active) return;
 
-      // Handle Status Effects
+      // Handle status effects (slow)
       if (enemy.status.isSlowed) {
         enemy.status.slowTimer -= deltaTime * 1000;
         if (enemy.status.slowTimer <= 0) {
@@ -75,10 +97,28 @@ export class EnemyManager {
         }
       }
 
+      // Boss skill: Blackout (Blackout)
+      // 1% chance to trigger skill per frame
+      if (enemy.type === EnemyType.ZERO_DAY && this.towerManager) {
+          if (Math.random() < 0.01) {
+              // Find towers in range
+              const range = 5 * this.gridManager.cellSize;
+              this.towerManager.towers.forEach(tower => {
+                  const towerPos = this.gridManager.getCanvasPosition(tower.x, tower.y);
+                  const dx = towerPos.x - enemy.position.x;
+                  const dy = towerPos.y - enemy.position.y;
+                  if (dx*dx + dy*dy < range*range) {
+                      this.towerManager!.disableTower(tower.id, 5000); // Paralyze for 5 seconds
+                  }
+              });
+          }
+      }
+
+      // Path movement logic
       const path = this.gridManager.getPath();
       if (enemy.pathIndex >= path.length - 1) {
-        // Reached end
-        console.log('Enemy Reached Base!');
+        // Arrived at destination
+        console.log('Enemy reached base!');
         GameActions.takeDamage(10);
         enemy.active = false;
         return;
@@ -97,7 +137,7 @@ export class EnemyManager {
       const moveStep = currentSpeed * deltaTime;
 
       if (distance < moveStep) {
-        // Reached node
+        // Arrived at node
         enemy.position.x = targetPos.x;
         enemy.position.y = targetPos.y;
         enemy.pathIndex++;
@@ -107,38 +147,43 @@ export class EnemyManager {
       }
     });
 
-    // Cleanup
+    // Clean up dead enemies
     this.enemies = this.enemies.filter(e => e.active);
   }
 
+  /**
+   * Draw all enemies
+   * @param ctx Canvas rendering context
+   */
   draw(ctx: CanvasRenderingContext2D) {
     this.enemies.forEach(enemy => {
       let color = '#ff0000';
       let scale = 0.6;
 
+      // Set color and size based on type
       switch (enemy.type) {
         case EnemyType.REQ_HEAVY:
-          color = '#880000'; // Dark Red
+          color = '#880000'; // Deep red (tank)
           scale = 0.8;
           break;
         case EnemyType.REQ_STREAM:
-          color = '#ff8888'; // Light Red
+          color = '#ff8888'; // Light red (fast)
           scale = 0.4;
           break;
         case EnemyType.ZERO_DAY:
-          color = '#800080'; // Purple
+          color = '#800080'; // Purple (Boss)
           scale = 0.9;
           break;
       }
 
-      // Visual indicator for Slow
+      // Visual indicator for slow effect
       if (enemy.status.isSlowed) {
-          color = '#00ffff'; // Cyan tint for slow
+          color = '#00ffff'; // Blue indicates slow
       }
 
       ctx.fillStyle = color;
       
-      // Draw centered
+      // Draw enemy (centered)
       const size = this.gridManager.cellSize * scale;
       const offset = (this.gridManager.cellSize - size) / 2;
       

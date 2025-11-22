@@ -3,6 +3,10 @@ import { GridManager } from './GridManager';
 import { EnemyManager } from './EnemyManager';
 import { ProjectileManager } from './ProjectileManager';
 
+/**
+ * TowerManager - Tower manager
+ * Manages tower creation, targeting, attacking, and rendering
+ */
 export class TowerManager {
   towers: Tower[] = [];
   gridManager: GridManager;
@@ -19,12 +23,19 @@ export class TowerManager {
     this.projectileManager = projectileManager;
   }
 
+  /**
+   * Add a new tower
+   * @param x Grid X coordinate
+   * @param y Grid Y coordinate
+   * @param type Tower type
+   */
   addTower(x: number, y: number, type: TowerType) {
     let range = 3;
     let damage = 20;
     let cooldown = 500;
     let cost = 100;
 
+    // Set tower attributes based on type
     switch (type) {
       case TowerType.WAF: // AOE
         range = 2;
@@ -32,7 +43,7 @@ export class TowerManager {
         cooldown = 1000;
         cost = 200;
         break;
-      case TowerType.DPI: // Sniper
+      case TowerType.DPI: // Sniper (High damage)
         range = 6;
         damage = 100;
         cooldown = 2000;
@@ -62,13 +73,23 @@ export class TowerManager {
       damage: damage,
       cooldown: cooldown,
       lastFired: 0,
-      cost: cost
+      cost: cost,
+      disabledUntil: 0 // 0 means tower is enabled
     };
     this.towers.push(newTower);
   }
 
-  update(deltaTime: number, now: number) {
+  /**
+   * Update all towers' state (targeting and attacking)
+   * @param deltaTime Time increment (not used)
+   * @param now Current timestamp
+   */
+  update(_deltaTime: number, now: number) {
     this.towers.forEach(tower => {
+      // If tower is disabled, skip
+      if (now < tower.disabledUntil) return;
+
+      // If tower is cooling down, skip
       if (now - tower.lastFired < tower.cooldown) return;
 
       const target = this.findTarget(tower);
@@ -86,6 +107,11 @@ export class TowerManager {
     });
   }
 
+  /**
+   * Find target enemy for tower
+   * @param tower Tower instance
+   * @returns Found enemy, or null
+   */
   findTarget(tower: Tower): Enemy | null {
     const rangePx = tower.range * this.gridManager.cellSize;
     const towerPos = this.gridManager.getCanvasPosition(tower.x, tower.y);
@@ -94,7 +120,8 @@ export class TowerManager {
         y: towerPos.y + this.gridManager.cellSize / 2
     };
 
-    const enemiesInRange = this.enemyManager.enemies.filter(enemy => {
+    // Filter enemies in range
+    const enemiesInRange = this.enemyManager.enemies.filter((enemy: Enemy) => {
       if (!enemy.active) return false;
       const dx = enemy.position.x - towerCenter.x;
       const dy = enemy.position.y - towerCenter.y;
@@ -103,31 +130,50 @@ export class TowerManager {
 
     if (enemiesInRange.length === 0) return null;
 
-    // Targeting Strategy
+    // Targeting strategy
     if (tower.type === TowerType.DPI) {
-        // Strongest first
-        return enemiesInRange.sort((a, b) => b.hp - a.hp)[0] || null;
+        // Prioritize the enemy with the most health (sniper mode)
+        return enemiesInRange.sort((a: Enemy, b: Enemy) => b.hp - a.hp)[0] || null;
     }
 
-    // Default: First along path
-    return enemiesInRange.sort((a, b) => b.pathIndex - a.pathIndex)[0] || null;
+    // Default: Prioritize the enemy with the lowest path index
+    return enemiesInRange.sort((a: Enemy, b: Enemy) => b.pathIndex - a.pathIndex)[0] || null;
   }
 
+  /**
+   * Disable a tower (Boss skill)
+   * @param towerId Tower ID
+   * @param duration Disable duration (milliseconds)
+   */
   disableTower(towerId: string, duration: number) {
-      // TODO: Implement disable logic
-      // For now, just log it
-      console.log(`Tower ${towerId} disabled for ${duration}ms`);
+      const tower = this.towers.find(t => t.id === towerId);
+      if (tower) {
+          tower.disabledUntil = Date.now() + duration;
+          console.log(`Tower ${towerId} disabled for ${duration}ms`);
+      }
   }
 
+  /**
+   * Draw all towers
+   * @param ctx Canvas rendering context
+   */
   draw(ctx: CanvasRenderingContext2D) {
+    const now = Date.now();
+
     this.towers.forEach(tower => {
       const pos = this.gridManager.getCanvasPosition(tower.x, tower.y);
       
       let color = '#4488ff';
-      switch (tower.type) {
-        case TowerType.WAF: color = '#ff8800'; break; // Orange
-        case TowerType.DPI: color = '#ff00ff'; break; // Magenta
-        case TowerType.CACHE: color = '#00ffff'; break; // Cyan
+      
+      // Check if tower is disabled
+      if (now < tower.disabledUntil) {
+          color = '#555555'; // Gray
+      } else {
+        switch (tower.type) {
+            case TowerType.WAF: color = '#ff8800'; break; // Orange
+            case TowerType.DPI: color = '#ff00ff'; break; // Magenta
+            case TowerType.CACHE: color = '#00ffff'; break; // Cyan
+        }
       }
 
       ctx.fillStyle = color;
@@ -142,6 +188,12 @@ export class TowerManager {
       ctx.fillStyle = '#fff';
       ctx.font = '10px monospace';
       ctx.fillText(tower.type.substring(0, 3), pos.x + 10, pos.y + 30);
+      
+      // Disable indicator
+      if (now < tower.disabledUntil) {
+          ctx.fillStyle = '#ff0000';
+          ctx.fillText('OFF', pos.x + 15, pos.y + 45);
+      }
     });
   }
 }
