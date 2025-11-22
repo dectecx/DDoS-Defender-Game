@@ -4,10 +4,10 @@
   "mapHeight": 12,
   "initialResources": 500,
   "mapLayout": [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -20,24 +20,305 @@
   "waves": [
     {
       "waveId": 1,
-      "enemyType": "REQ_STD",
-      "count": 5,
-      "spawnInterval": 1500,
-      "delayBeforeWave": 2000
+      "enemies": [
+        {
+          "type": "REQ_STD",
+          "count": 10,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 1000
+          }
+        }
+      ],
+      "waveTimeout": 30000,
+      "rewards": {
+        "baseGold": 60,
+        "bonusGold": 120
+      }
     },
     {
       "waveId": 2,
-      "enemyType": "REQ_HEAVY",
-      "count": 3,
-      "spawnInterval": 3000,
-      "delayBeforeWave": 5000
+      "enemies": [
+        {
+          "type": "REQ_STD",
+          "count": 12,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 900
+          }
+        }
+      ],
+      "waveTimeout": 30000,
+      "rewards": {
+        "baseGold": 70,
+        "bonusGold": 140
+      }
     },
     {
       "waveId": 3,
-      "enemyType": "REQ_STREAM",
-      "count": 10,
-      "spawnInterval": 500,
-      "delayBeforeWave": 5000
+      "enemies": [
+        {
+          "type": "REQ_STD",
+          "count": 10,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 1000
+          }
+        },
+        {
+          "type": "REQ_HEAVY",
+          "count": 2,
+          "spawnSchedule": {
+            "type": "custom",
+            "times": [3000, 8000]
+          }
+        }
+      ],
+      "waveTimeout": 30000,
+      "rewards": {
+        "baseGold": 80,
+        "bonusGold": 160
+      }
+    },
+    {
+      "waveId": 4,
+      "enemies": [
+        {
+          "type": "REQ_STD",
+          "count": 8,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 1200
+          }
+        },
+        {
+          "type": "REQ_STREAM",
+          "count": 12,
+          "spawnSchedule": {
+            "type": "burst",
+            "bursts": [
+              { "time": 5000, "count": 6 },
+              { "time": 8000, "count": 6 }
+            ]
+          }
+        }
+      ],
+      "waveTimeout": 30000,
+      "rewards": {
+        "baseGold": 90,
+        "bonusGold": 180
+      }
+    },
+    {
+      "waveId": 5,
+      "enemies": [
+        {
+          "type": "REQ_STD",
+          "count": 10,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 1000
+          }
+        },
+        {
+          "type": "REQ_HEAVY",
+          "count": 3,
+          "spawnSchedule": {
+            "type": "custom",
+            "times": [2000, 6000, 10000]
+          }
+        },
+        {
+          "type": "REQ_STREAM",
+          "count": 10,
+          "spawnSchedule": {
+            "type": "burst",
+            "bursts": [
+              { "time": 12000, "count": 10 }
+            ]
+          }
+        }
+      ],
+      "waveTimeout": 30000,
+      "rewards": {
+        "baseGold": 100,
+        "bonusGold": 200
+      }
+    },
+    {
+      "waveId": 6,
+      "enemies": [
+        {
+          "type": "REQ_STD",
+          "count": 8,
+          "spawnSchedule": {
+            "type": "custom",
+            "times": [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000]
+          }
+        },
+        {
+          "type": "REQ_HEAVY",
+          "count": 2,
+          "spawnSchedule": {
+            "type": "custom",
+            "times": [2500, 6500]
+          }
+        },
+        {
+          "type": "REQ_STREAM",
+          "count": 12,
+          "spawnSchedule": {
+            "type": "burst",
+            "bursts": [
+              { "time": 8000, "count": 6 },
+              { "time": 9000, "count": 6 }
+            ]
+          }
+        }
+      ],
+      "waveTimeout": 25000,
+      "rewards": {
+        "baseGold": 110,
+        "bonusGold": 220
+      }
+    },
+    {
+      "waveId": 7,
+      "enemies": [
+        {
+          "type": "REQ_STD",
+          "count": 12,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 800
+          }
+        },
+        {
+          "type": "REQ_HEAVY",
+          "count": 4,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 2500
+          }
+        },
+        {
+          "type": "REQ_STREAM",
+          "count": 15,
+          "spawnSchedule": {
+            "type": "burst",
+            "bursts": [
+              { "time": 10000, "count": 8 },
+              { "time": 12000, "count": 7 }
+            ]
+          }
+        }
+      ],
+      "waveTimeout": 25000,
+      "rewards": {
+        "baseGold": 120,
+        "bonusGold": 240
+      }
+    },
+    {
+      "waveId": 8,
+      "enemies": [
+        {
+          "type": "REQ_STD",
+          "count": 10,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 900
+          }
+        },
+        {
+          "type": "REQ_HEAVY",
+          "count": 5,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 2000
+          }
+        },
+        {
+          "type": "REQ_STREAM",
+          "count": 20,
+          "spawnSchedule": {
+            "type": "burst",
+            "bursts": [
+              { "time":8000, "count": 10 },
+              { "time": 10000, "count": 10 }
+            ]
+          }
+        }
+      ],
+      "waveTimeout": 25000,
+      "rewards": {
+        "baseGold": 130,
+        "bonusGold": 260
+      }
+    },
+    {
+      "waveId": 9,
+      "enemies": [
+        {
+          "type": "REQ_STD",
+          "count": 15,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 700
+          }
+        },
+        {
+          "type": "REQ_HEAVY",
+          "count": 6,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 1800
+          }
+        },
+        {
+          "type": "REQ_STREAM",
+          "count": 25,
+          "spawnSchedule": {
+            "type": "burst",
+            "bursts": [
+              { "time": 12000, "count": 15 },
+              { "time": 14000, "count": 10 }
+            ]
+          }
+        }
+      ],
+      "waveTimeout": 20000,
+      "rewards": {
+        "baseGold": 140,
+        "bonusGold": 280
+      }
+    },
+    {
+      "waveId": 10,
+      "enemies": [
+        {
+          "type": "REQ_STD",
+          "count": 5,
+          "spawnSchedule": {
+            "type": "interval",
+            "interval": 1000
+          }
+        },
+        {
+          "type": "ZERO_DAY",
+          "count": 1,
+          "spawnSchedule": {
+            "type": "custom",
+            "times": [10000]
+          }
+        }
+      ],
+      "waveTimeout": 40000,
+      "rewards": {
+        "baseGold": 250,
+        "bonusGold": 500
+      },
+      "isBossWave": true
     }
   ]
 }

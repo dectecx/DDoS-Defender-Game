@@ -61,6 +61,13 @@ export const GameActions = {
   },
   
   /**
+   * Heal the base (capped at max HP)
+   */
+  healBase(amount: number) {
+    gameState.hp = Math.min(gameState.hp + amount, gameState.maxHp);
+  },
+  
+  /**
    * Set victory state
    */
   setVictory() {

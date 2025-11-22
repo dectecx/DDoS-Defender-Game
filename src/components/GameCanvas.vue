@@ -9,6 +9,7 @@ import { WaveManager } from '../game/WaveManager';
 import { gameState } from '../game/GameState';
 import { EnemyType, TowerType } from '../game/types';
 import level1 from '../game/levels/level1.json';
+import WaveTransition from './WaveTransition.vue';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
@@ -26,6 +27,12 @@ let lastTime = 0;
 
 // UI State
 const selectedTower = ref<TowerType>(TowerType.RATE_LIMIT);
+
+// Wave Transition State
+const showWaveTransition = ref(false);
+const currentWaveRewards = ref({ baseGold: 0, bonusGold: 0 });
+const waveTimeout = ref(30000);
+const completedWaveNum = ref(0);
 
 const resizeCanvas = () => {
   if (!canvasRef.value) return;
@@ -120,6 +127,14 @@ onMounted(() => {
     // Set up circular dependencies (let EnemyManager access TowerManager for Boss skill)
     enemyManager.setTowerManager(towerManager);
 
+    // Set up wave transition callback
+    waveManager.onWaveTransitionStart = (wave, rewards, timeout) => {
+      completedWaveNum.value = wave;
+      currentWaveRewards.value = rewards;
+      waveTimeout.value = timeout;
+      showWaveTransition.value = true;
+    };
+
     window.addEventListener('resize', resizeCanvas);
     canvasRef.value.addEventListener('click', handleCanvasClick);
     
@@ -135,11 +150,31 @@ onUnmounted(() => {
   }
   cancelAnimationFrame(animationFrameId);
 });
+
+/**
+ * Handle wave transition - called when user clicks "Start Next Wave"
+ */
+const handleWaveTransitionComplete = (bonusGold: number) => {
+  showWaveTransition.value = false;
+  if (waveManager) {
+    waveManager.startNextWave(bonusGold);
+  }
+};
 </script>
 
 <template>
   <div class="game-container">
     <canvas ref="canvasRef" class="game-canvas"></canvas>
+    
+    <!-- Wave Transition Overlay -->
+    <WaveTransition 
+      :show="showWaveTransition"
+      :completedWave="completedWaveNum"
+      :baseGold="currentWaveRewards.baseGold"
+      :maxBonusGold="currentWaveRewards.bonusGold"
+      :timeoutDuration="waveTimeout"
+      @startNextWave="handleWaveTransitionComplete"
+    />
     
     <div class="ui-overlay" v-if="!gameState.isGameOver && !gameState.isVictory">
       <div class="tower-selection">
