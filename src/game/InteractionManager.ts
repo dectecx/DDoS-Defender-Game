@@ -9,7 +9,7 @@ export class InteractionManager {
     this.gridManager = gridManager;
   }
 
-  handleClick(canvasX: number, canvasY: number) {
+  handleClick(canvasX: number, canvasY: number, selectedTowerType: TowerType) {
     const gridPos = this.gridManager.getGridPosition(canvasX, canvasY);
     
     if (!this.gridManager.isValidPosition(gridPos)) return;
@@ -18,17 +18,20 @@ export class InteractionManager {
 
     if (!cell) return;
 
-    // Simple toggle for MVP: Click empty -> Build Tower
-    // In real game, we'd select a tower type from UI first.
-    // For now, default to RATE_LIMIT tower.
-    
     if (cell.type === CellType.EMPTY) {
-      const cost = 100; // Hardcoded cost for now
+      let cost = 100;
+      switch (selectedTowerType) {
+        case TowerType.WAF: cost = 200; break;
+        case TowerType.DPI: cost = 300; break;
+        case TowerType.CACHE: cost = 150; break;
+        case TowerType.RATE_LIMIT: default: cost = 100; break;
+      }
+
       if (GameActions.spendMoney(cost)) {
         cell.type = CellType.TOWER;
-        cell.towerId = crypto.randomUUID(); // Placeholder, actual tower creation handled by TowerManager
-        console.log(`Built tower at ${gridPos.x}, ${gridPos.y}`);
-        return { action: 'BUILD', x: gridPos.x, y: gridPos.y, type: TowerType.RATE_LIMIT };
+        cell.towerId = crypto.randomUUID();
+        console.log(`Built ${selectedTowerType} at ${gridPos.x}, ${gridPos.y}`);
+        return { action: 'BUILD', x: gridPos.x, y: gridPos.y, type: selectedTowerType };
       } else {
         console.log('Not enough money!');
       }

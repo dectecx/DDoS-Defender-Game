@@ -7,7 +7,7 @@ import { ProjectileManager } from '../game/ProjectileManager';
 import { InteractionManager } from '../game/InteractionManager';
 import { WaveManager } from '../game/WaveManager';
 import { gameState } from '../game/GameState';
-import { EnemyType } from '../game/types';
+import { EnemyType, TowerType } from '../game/types';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
@@ -23,6 +23,9 @@ let waveManager: WaveManager | null = null;
 
 let lastTime = 0;
 
+// UI State
+const selectedTower = ref<TowerType>(TowerType.RATE_LIMIT);
+
 const resizeCanvas = () => {
   if (!canvasRef.value) return;
   canvasRef.value.width = window.innerWidth;
@@ -37,7 +40,7 @@ const handleCanvasClick = (event: MouseEvent) => {
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
   
-  const result = interactionManager.handleClick(x, y);
+  const result = interactionManager.handleClick(x, y, selectedTower.value);
   if (result && result.action === 'BUILD' && towerManager) {
     towerManager.addTower(result.x, result.y, result.type);
   }
@@ -56,7 +59,7 @@ const draw = () => {
   enemyManager.draw(ctx);
   projectileManager.draw(ctx);
   
-  // Draw UI Overlay
+  // Draw UI Overlay (Canvas part)
   ctx.fillStyle = '#00ff00';
   ctx.font = '20px monospace';
   ctx.fillText('DDoS Defender - System Online', 20, 40);
@@ -73,6 +76,14 @@ const draw = () => {
     ctx.textAlign = 'center';
     ctx.fillText('SYSTEM OFFLINE (GAME OVER)', canvasRef.value.width / 2, canvasRef.value.height / 2);
     ctx.textAlign = 'left';
+  } else if (gameState.isVictory) {
+    ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+    ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height);
+    ctx.fillStyle = '#fff';
+    ctx.font = '48px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('THREAT MITIGATED (VICTORY)', canvasRef.value.width / 2, canvasRef.value.height / 2);
+    ctx.textAlign = 'left';
   }
 };
 
@@ -81,7 +92,7 @@ const loop = (timestamp: number) => {
   const deltaTime = (timestamp - lastTime) / 1000;
   lastTime = timestamp;
 
-  if (!gameState.isGameOver) {
+  if (!gameState.isGameOver && !gameState.isVictory) {
     if (waveManager) waveManager.update(deltaTime);
     if (enemyManager) enemyManager.update(deltaTime);
     if (projectileManager) projectileManager.update(deltaTime);
@@ -122,13 +133,86 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <canvas ref="canvasRef" class="game-canvas"></canvas>
+  <div class="game-container">
+    <canvas ref="canvasRef" class="game-canvas"></canvas>
+    
+    <div class="ui-overlay" v-if="!gameState.isGameOver && !gameState.isVictory">
+      <div class="tower-selection">
+        <button 
+          :class="{ active: selectedTower === TowerType.RATE_LIMIT }"
+          @click="selectedTower = TowerType.RATE_LIMIT"
+        >
+          Rate Limit ($100)
+        </button>
+        <button 
+          :class="{ active: selectedTower === TowerType.WAF }"
+          @click="selectedTower = TowerType.WAF"
+        >
+          WAF ($200)
+        </button>
+        <button 
+          :class="{ active: selectedTower === TowerType.DPI }"
+          @click="selectedTower = TowerType.DPI"
+        >
+          DPI ($300)
+        </button>
+        <button 
+          :class="{ active: selectedTower === TowerType.CACHE }"
+          @click="selectedTower = TowerType.CACHE"
+        >
+          Cache ($150)
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
+.game-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .game-canvas {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.ui-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #00ff00;
+}
+
+.tower-selection {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  background: #1a1a1a;
+  color: #00ff00;
+  border: 1px solid #00ff00;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: monospace;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+button:hover {
+  background: #003300;
+}
+
+button.active {
+  background: #00ff00;
+  color: #000;
 }
 </style>

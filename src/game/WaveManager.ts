@@ -36,6 +36,7 @@ export class WaveManager {
     if (index >= level1.waves.length) {
       this.isLevelComplete = true;
       console.log('Level Complete!');
+      GameActions.setVictory();
       return;
     }
 

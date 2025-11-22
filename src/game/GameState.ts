@@ -7,6 +7,7 @@ export interface GameState {
   wave: number;
   score: number;
   isGameOver: boolean;
+  isVictory: boolean;
 }
 
 export const gameState = reactive<GameState>({
@@ -15,7 +16,8 @@ export const gameState = reactive<GameState>({
   maxHp: 100,
   wave: 1,
   score: 0,
-  isGameOver: false
+  isGameOver: false,
+  isVictory: false
 });
 
 export const GameActions = {
@@ -30,10 +32,14 @@ export const GameActions = {
     return false;
   },
   takeDamage(amount: number) {
-    gameState.hp = Math.max(0, gameState.hp - amount);
+    gameState.hp -= amount;
     if (gameState.hp <= 0) {
+      gameState.hp = 0;
       gameState.isGameOver = true;
     }
+  },
+  setVictory() {
+    gameState.isVictory = true;
   },
   nextWave() {
     gameState.wave++;
