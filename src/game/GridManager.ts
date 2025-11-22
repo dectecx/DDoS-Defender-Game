@@ -1,6 +1,10 @@
 import { CellType } from './types';
 import type { Cell, GridConfig, Position } from './types';
 
+/**
+ * GridManager - Grid and map manager
+ * Manages the game grid, map layout, path definition, and coordinate conversion
+ */
 export class GridManager {
   width: number;
   height: number;
@@ -17,6 +21,10 @@ export class GridManager {
     // Initialize will be called externally with mapLayout
   }
 
+  /**
+   * Initialize the grid with map layout
+   * @param mapLayout 2D array where 1 = PATH, 0 = EMPTY
+   */
   initialize(mapLayout?: number[][]) {
     this.grid = [];
     this.pathCoordinates = [];
@@ -60,6 +68,10 @@ export class GridManager {
     this.pathCoordinates = hardcodedPath;
   }
 
+  /**
+   * Draw the grid
+   * @param ctx Canvas rendering context
+   */
   draw(ctx: CanvasRenderingContext2D) {
     if (!ctx) return;
 
@@ -90,6 +102,11 @@ export class GridManager {
     }
   }
 
+  /**
+   * Get color for a cell type
+   * @param type Cell type
+   * @returns Hex color string
+   */
   getCellColor(type: CellType): string {
     switch (type) {
       case CellType.EMPTY: return '#222'; // Dark background
@@ -100,6 +117,12 @@ export class GridManager {
     }
   }
 
+  /**
+   * Convert canvas coordinates to grid coordinates
+   * @param canvasX Canvas X position
+   * @param canvasY Canvas Y position
+   * @returns Grid position
+   */
   getGridPosition(canvasX: number, canvasY: number): Position {
     return {
       x: Math.floor(canvasX / this.cellSize),
@@ -107,6 +130,12 @@ export class GridManager {
     };
   }
 
+  /**
+   * Convert grid coordinates to canvas coordinates
+   * @param gridX Grid X position
+   * @param gridY Grid Y position
+   * @returns Canvas position (top-left of cell)
+   */
   getCanvasPosition(gridX: number, gridY: number): Position {
     return {
       x: gridX * this.cellSize,
@@ -114,10 +143,19 @@ export class GridManager {
     };
   }
   
+  /**
+   * Get the enemy path
+   * @returns Array of positions defining the path
+   */
   getPath(): Position[] {
       return this.pathCoordinates;
   }
   
+  /**
+   * Check if a grid position is valid
+   * @param pos Grid position
+   * @returns True if position is within grid bounds
+   */
   isValidPosition(pos: Position): boolean {
     return pos.x >= 0 && pos.x < this.width && pos.y >= 0 && pos.y < this.height;
   }

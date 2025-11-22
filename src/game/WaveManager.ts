@@ -3,6 +3,9 @@ import { GameActions, gameState } from './GameState';
 import { EnemyType } from './types';
 import level1 from './levels/level1.json';
 
+/**
+ * Wave configuration interface
+ */
 interface WaveConfig {
   waveId: number;
   enemyType: string;
@@ -11,6 +14,10 @@ interface WaveConfig {
   delayBeforeWave: number;
 }
 
+/**
+ * WaveManager - Wave and level progression manager
+ * Manages wave loading, enemy spawning timing, and level completion
+ */
 export class WaveManager {
   enemyManager: EnemyManager;
   currentWaveIndex: number = 0;
@@ -27,11 +34,18 @@ export class WaveManager {
     this.startLevel();
   }
 
+  /**
+   * Start the level from wave 0
+   */
   startLevel() {
     this.currentWaveIndex = 0;
     this.loadWave(this.currentWaveIndex);
   }
 
+  /**
+   * Load a specific wave by index
+   * @param index Wave index
+   */
   loadWave(index: number) {
     if (index >= level1.waves.length) {
       this.isLevelComplete = true;
@@ -55,6 +69,10 @@ export class WaveManager {
     console.log(`Preparing Wave ${gameState.wave}`);
   }
 
+  /**
+   * Update wave state and spawn enemies
+   * @param deltaTime Time delta in seconds
+   */
   update(deltaTime: number) {
     if (this.isLevelComplete) return;
     if (!this.currentWaveConfig) return;
@@ -78,9 +96,7 @@ export class WaveManager {
         this.timeSinceLastSpawn = 0;
       } else {
         // All enemies spawned for this wave
-        // Check if all enemies are dead to proceed to next wave
-        // For now, we just wait until the last one is spawned and then immediately queue next wave logic?
-        // Better: Wait for enemy count to be 0.
+        // Wait for all enemies to be defeated before proceeding
         if (this.enemyManager.enemies.length === 0) {
             this.currentWaveIndex++;
             this.loadWave(this.currentWaveIndex);
@@ -89,6 +105,9 @@ export class WaveManager {
     }
   }
 
+  /**
+   * Spawn a single enemy based on current wave config
+   */
   spawnEnemy() {
     if (!this.currentWaveConfig) return;
     

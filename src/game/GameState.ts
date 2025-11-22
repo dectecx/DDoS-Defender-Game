@@ -1,5 +1,8 @@
 import { reactive } from 'vue';
 
+/**
+ * GameState interface - Global game state
+ */
 export interface GameState {
   money: number;
   hp: number;
@@ -10,6 +13,9 @@ export interface GameState {
   isVictory: boolean;
 }
 
+/**
+ * Reactive game state object
+ */
 export const gameState = reactive<GameState>({
   money: 500, // Initial resources
   hp: 100,
@@ -20,10 +26,21 @@ export const gameState = reactive<GameState>({
   isVictory: false
 });
 
+/**
+ * GameActions - Actions to modify game state
+ */
 export const GameActions = {
+  /**
+   * Add money to player's resources
+   */
   addMoney(amount: number) {
     gameState.money += amount;
   },
+  
+  /**
+   * Spend money if player has enough
+   * @returns True if successful, false otherwise
+   */
   spendMoney(amount: number): boolean {
     if (gameState.money >= amount) {
       gameState.money -= amount;
@@ -31,6 +48,10 @@ export const GameActions = {
     }
     return false;
   },
+  
+  /**
+   * Apply damage to the base
+   */
   takeDamage(amount: number) {
     gameState.hp -= amount;
     if (gameState.hp <= 0) {
@@ -38,9 +59,17 @@ export const GameActions = {
       gameState.isGameOver = true;
     }
   },
+  
+  /**
+   * Set victory state
+   */
   setVictory() {
     gameState.isVictory = true;
   },
+  
+  /**
+   * Advance to next wave
+   */
   nextWave() {
     gameState.wave++;
   }

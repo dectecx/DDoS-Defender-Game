@@ -2,6 +2,10 @@ import { GridManager } from './GridManager';
 import { GameActions } from './GameState';
 import { CellType, TowerType } from './types';
 
+/**
+ * InteractionManager - User interaction manager
+ * Handles mouse clicks on the grid and tower placement logic
+ */
 export class InteractionManager {
   gridManager: GridManager;
 
@@ -9,6 +13,13 @@ export class InteractionManager {
     this.gridManager = gridManager;
   }
 
+  /**
+   * Handle a click on the canvas
+   * @param canvasX Canvas X position
+   * @param canvasY Canvas Y position
+   * @param selectedTowerType Tower type to build
+   * @returns Build action result or null
+   */
   handleClick(canvasX: number, canvasY: number, selectedTowerType: TowerType) {
     const gridPos = this.gridManager.getGridPosition(canvasX, canvasY);
     
@@ -19,6 +30,7 @@ export class InteractionManager {
     if (!cell) return;
 
     if (cell.type === CellType.EMPTY) {
+      // Calculate cost based on tower type
       let cost = 100;
       switch (selectedTowerType) {
         case TowerType.WAF: cost = 200; break;
