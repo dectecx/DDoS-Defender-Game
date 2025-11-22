@@ -43,7 +43,7 @@ export interface Tower {
   cost: number;
   disabledUntil: number; // timestamp, 0 if active
   
-  // Experience & Leveling (Phase 8)
+  // Experience & Leveling
   level: number;           // Current level (1-10)
   exp: number;            // Current experience
   maxExp: number;         // Experience needed for next level
@@ -66,7 +66,7 @@ export interface Enemy {
     slowTimer: number;
   };
   
-  // Rewards (Phase 8-9)
+  // Rewards
   goldReward: number;  // Gold awarded on kill
   expReward: number;   // Experience awarded to tower
 }

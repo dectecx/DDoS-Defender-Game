@@ -1,7 +1,6 @@
 import { GridManager } from './GridManager';
 import { GameActions } from './GameState';
 import { CellType, TowerType } from './types';
-import type { Tower } from './types';
 
 /**
  * InteractionManager - User interaction manager
@@ -19,14 +18,12 @@ export class InteractionManager {
    * @param canvasX Canvas X position  
    * @param canvasY Canvas Y position
    * @param selectedTowerType Tower type to build
-   * @param mode Interaction mode: 'build' or 'select'
    * @returns Action result or null
    */
   handleClick(
     canvasX: number, 
     canvasY: number, 
-    selectedTowerType: TowerType,
-    mode: 'build' | 'select' = 'build'
+    selectedTowerType: TowerType
   ): { action: 'BUILD' | 'SELECT', x: number, y: number, type: TowerType } | null {
     const gridPos = this.gridManager.getGridPosition(canvasX, canvasY);
     
@@ -35,20 +32,17 @@ export class InteractionManager {
     const cell = this.gridManager.grid[gridPos.y]?.[gridPos.x];
     if (!cell) return null;
 
-    // Select mode - return tower position if clicked on tower
-    if (mode === 'select') {
-      if (cell.type === CellType.TOWER) {
-        return {
-          action: 'SELECT',
-          x: gridPos.x,
-          y: gridPos.y,
-          type: selectedTowerType // Not used in select mode
-        };
-      }
-      return null;
+    // If clicking on a tower, return SELECT action
+    if (cell.type === CellType.TOWER) {
+      return {
+        action: 'SELECT',
+        x: gridPos.x,
+        y: gridPos.y,
+        type: selectedTowerType // Not used for SELECT
+      };
     }
 
-    // Build mode - try to build tower
+    // If clicking on empty space, try to build
     if (cell.type === CellType.EMPTY) {
       // Calculate cost based on tower type
       let cost = 100;
@@ -67,8 +61,6 @@ export class InteractionManager {
       } else {
         console.log('Not enough money!');
       }
-    } else if (cell.type === CellType.TOWER) {
-      console.log('Tower already exists here.');
     } else {
       console.log('Cannot build here.');
     }

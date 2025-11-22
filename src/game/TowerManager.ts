@@ -44,7 +44,6 @@ export class TowerManager {
       lastFired: 0,
       cost: baseStats.cost,
       disabledUntil: 0,
-      // Experience system (Phase 8)
       level: 1,
       exp: 0,
       maxExp: ExperienceSystem.calculateMaxExp(1),
@@ -128,7 +127,7 @@ export class TowerManager {
   }
 
   /**
-   * Sell a tower (Phase 8.2)
+   * Sell a tower
    * @param towerId Tower ID to sell
    * @returns Gold refunded, or 0 if tower not found
    */
@@ -150,7 +149,7 @@ export class TowerManager {
   }
 
   /**
-   * Get tower at specific grid position (Phase 8.2)
+   * Get tower at specific grid position
    * @param gridX Grid X coordinate
    * @param gridY Grid Y coordinate
    * @returns Tower if found, null otherwise
@@ -201,14 +200,14 @@ export class TowerManager {
           ctx.fillText('OFF', pos.x + 15, pos.y + 45);
       }
       
-      // Level indicator (Phase 8)
+      // Level indicator
       if (tower.level > 1) {
         ctx.fillStyle = '#ffd700';
         ctx.font = 'bold 12px monospace';
         ctx.fillText(`Lv.${tower.level}`, pos.x + 5, pos.y + 15);
       }
       
-      // Experience bar (Phase 8)
+      // Experience bar
       const expPercent = tower.exp / tower.maxExp;
       ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
       const barWidth = (this.gridManager.cellSize - 10) * expPercent;

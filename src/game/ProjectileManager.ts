@@ -16,7 +16,7 @@ export interface Projectile {
   active: boolean;
   targetX: number; // Snapshot of target position
   targetY: number;
-  ownerId?: string; // Tower ID that fired this projectile (Phase 8)
+  ownerId?: string; // Tower ID that fired this projectile
 }
 
 /**
@@ -26,14 +26,14 @@ export interface Projectile {
 export class ProjectileManager {
   projectiles: Projectile[] = [];
   enemyManager: EnemyManager;
-  towerManager: TowerManager | null = null; // For experience awards (Phase 8)
+  towerManager: TowerManager | null = null; // For experience awards
 
   constructor(enemyManager: EnemyManager) {
     this.enemyManager = enemyManager;
   }
 
   /**
-   * Set TowerManager reference (for experience awards)
+   * Set TowerManager reference
    */
   setTowerManager(tm: TowerManager) {
     this.towerManager = tm;
@@ -99,11 +99,11 @@ export class ProjectileManager {
             if (hitEnemy.hp <= 0) {
                 hitEnemy.active = false;
                 
-                // Award gold (Phase 8: use enemy's goldReward)
+                // Award gold
                 const goldReward = hitEnemy.goldReward || 20;
                 GameActions.addMoney(goldReward);
                 
-                // Award experience to tower (Phase 8)
+                // Award experience to tower
                 if (proj.ownerId && this.towerManager && hitEnemy.expReward) {
                   this.towerManager.awardExperience(proj.ownerId, hitEnemy.expReward);
                 }

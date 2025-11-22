@@ -171,7 +171,7 @@ export class GridManager {
   }
 
   /**
-   * Set cell type at specific grid position (Phase 8.2)
+   * Set cell type at specific grid position
    * @param x Grid X coordinate
    * @param y Grid Y coordinate
    * @param type New cell type

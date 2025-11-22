@@ -6,10 +6,12 @@ import { TowerManager } from '../game/TowerManager';
 import { ProjectileManager } from '../game/ProjectileManager';
 import { InteractionManager } from '../game/InteractionManager';
 import { WaveManager } from '../game/WaveManager';
-import { gameState } from '../game/GameState';
+import { gameState, GameActions } from '../game/GameState';
 import { EnemyType, TowerType } from '../game/types';
+import type { Tower } from '../game/types';
 import level1 from '../game/levels/level1.json';
 import WaveTransition from './WaveTransition.vue';
+import TowerInfoPanel from './TowerInfoPanel.vue';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
@@ -34,6 +36,10 @@ const currentWaveRewards = ref({ baseGold: 0, bonusGold: 0 });
 const waveTimeout = ref(30000);
 const completedWaveNum = ref(0);
 
+// Tower Info Panel State
+const showTowerInfo = ref(false);
+const selectedTowerForInfo = ref<Tower | null>(null);
+
 const resizeCanvas = () => {
   if (!canvasRef.value) return;
   canvasRef.value.width = window.innerWidth;
@@ -42,15 +48,24 @@ const resizeCanvas = () => {
 };
 
 const handleCanvasClick = (event: MouseEvent) => {
-  if (!interactionManager || !canvasRef.value) return;
+  if (!interactionManager || !canvasRef.value || !towerManager) return;
   
   const rect = canvasRef.value.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
   
   const result = interactionManager.handleClick(x, y, selectedTower.value);
-  if (result && result.action === 'BUILD' && towerManager) {
-    towerManager.addTower(result.x, result.y, result.type);
+  
+  if (result) {
+    if (result.action === 'BUILD') {
+      towerManager.addTower(result.x, result.y, result.type);
+    } else if (result.action === 'SELECT') {
+      const tower = towerManager.getTowerAt(result.x, result.y);
+      if (tower) {
+        selectedTowerForInfo.value = tower;
+        showTowerInfo.value = true;
+      }
+    }
   }
 };
 
@@ -163,6 +178,30 @@ const handleWaveTransitionComplete = (bonusGold: number) => {
     waveManager.startNextWave(bonusGold);
   }
 };
+
+/**
+ * Handle tower info panel close
+ */
+const handleTowerInfoClose = () => {
+  showTowerInfo.value = false;
+  selectedTowerForInfo.value = null;
+};
+
+/**
+ * Handle tower sell
+ */
+const handleTowerSell = (towerId: string) => {
+  if (!towerManager) return;
+  
+  const refund = towerManager.sellTower(towerId);
+  if (refund > 0) {
+    GameActions.addMoney(refund);
+    console.log(`Tower sold for ${refund}g`);
+  }
+  
+  showTowerInfo.value = false;
+  selectedTowerForInfo.value = null;
+};
 </script>
 
 <template>
@@ -207,6 +246,14 @@ const handleWaveTransitionComplete = (bonusGold: number) => {
         </button>
       </div>
     </div>
+    
+    <!-- Tower Info Panel -->
+    <TowerInfoPanel
+      :show="showTowerInfo"
+      :tower="selectedTowerForInfo"
+      @close="handleTowerInfoClose"
+      @sell="handleTowerSell"
+    />
   </div>
 </template>
 
