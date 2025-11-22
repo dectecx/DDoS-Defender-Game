@@ -126,6 +126,9 @@ onMounted(() => {
 
     // Set up circular dependencies (let EnemyManager access TowerManager for Boss skill)
     enemyManager.setTowerManager(towerManager);
+    
+    // Set up ProjectileManager -> TowerManager for experience awards
+    projectileManager.setTowerManager(towerManager);
 
     // Set up wave transition callback
     waveManager.onWaveTransitionStart = (wave, rewards, timeout) => {

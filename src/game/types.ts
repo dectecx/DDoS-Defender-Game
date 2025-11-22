@@ -59,6 +59,12 @@ export interface Enemy {
   position: Position;
   pathIndex: number;
   slowedUntil: number; // timestamp
+  active: boolean;
+  status: {
+    isSlowed: boolean;
+    slowFactor: number;
+    slowTimer: number;
+  };
   
   // Rewards (Phase 8-9)
   goldReward: number;  // Gold awarded on kill

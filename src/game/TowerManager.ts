@@ -76,7 +76,7 @@ export class TowerManager {
             y: towerPos.y + this.gridManager.cellSize / 2
         };
         
-        this.projectileManager.spawnProjectile(centerPos, target, tower.damage);
+        this.projectileManager.spawnProjectile(centerPos, target, tower.damage, tower.id);
         tower.lastFired = now;
       }
     });

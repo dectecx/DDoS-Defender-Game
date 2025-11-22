@@ -1,4 +1,5 @@
 import { EnemyManager } from './EnemyManager';
+import type { TowerManager } from './TowerManager';
 import type { Enemy, Position } from './types';
 import { GameActions } from './GameState';
 
@@ -15,6 +16,7 @@ export interface Projectile {
   active: boolean;
   targetX: number; // Snapshot of target position
   targetY: number;
+  ownerId?: string; // Tower ID that fired this projectile (Phase 8)
 }
 
 /**
@@ -24,9 +26,17 @@ export interface Projectile {
 export class ProjectileManager {
   projectiles: Projectile[] = [];
   enemyManager: EnemyManager;
+  towerManager: TowerManager | null = null; // For experience awards (Phase 8)
 
   constructor(enemyManager: EnemyManager) {
     this.enemyManager = enemyManager;
+  }
+
+  /**
+   * Set TowerManager reference (for experience awards)
+   */
+  setTowerManager(tm: TowerManager) {
+    this.towerManager = tm;
   }
 
   /**
@@ -34,8 +44,9 @@ export class ProjectileManager {
    * @param startPos Starting position (tower center)
    * @param target Target enemy
    * @param damage Damage to deal on hit
+   * @param ownerId Tower ID that fired this projectile (optional)
    */
-  spawnProjectile(startPos: Position, target: Enemy, damage: number) {
+  spawnProjectile(startPos: Position, target: Enemy, damage: number, ownerId?: string) {
     this.projectiles.push({
       id: crypto.randomUUID(),
       x: startPos.x,
@@ -45,7 +56,8 @@ export class ProjectileManager {
       targetY: target.position.y,
       speed: 400, // pixels per second
       damage: damage,
-      active: true
+      active: true,
+      ownerId: ownerId // Track which tower fired this
     });
   }
 
@@ -86,7 +98,15 @@ export class ProjectileManager {
             hitEnemy.hp -= proj.damage;
             if (hitEnemy.hp <= 0) {
                 hitEnemy.active = false;
-                GameActions.addMoney(20);
+                
+                // Award gold (Phase 8: use enemy's goldReward)
+                const goldReward = hitEnemy.goldReward || 20;
+                GameActions.addMoney(goldReward);
+                
+                // Award experience to tower (Phase 8)
+                if (proj.ownerId && this.towerManager && hitEnemy.expReward) {
+                  this.towerManager.awardExperience(proj.ownerId, hitEnemy.expReward);
+                }
             }
 
             // Apply Status Effects

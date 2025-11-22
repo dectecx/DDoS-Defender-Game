@@ -40,24 +40,34 @@ export class EnemyManager {
     // Set enemy attributes based on type
     let hp = 100;
     let speed = 100;
+    let goldReward = 20;
+    let expReward = 10;
     
     switch (type) {
       case EnemyType.REQ_HEAVY:
         hp = 300;
         speed = 50;
+        goldReward = 50;
+        expReward = 30;
         break;
       case EnemyType.REQ_STREAM:
         hp = 30;
         speed = 200;
+        goldReward = 10;
+        expReward = 5;
         break;
       case EnemyType.ZERO_DAY:
         hp = 1000;
         speed = 40;
+        goldReward = 200;
+        expReward = 100;
         break;
       case EnemyType.REQ_STD:
       default:
         hp = 100;
         speed = 100;
+        goldReward = 20;
+        expReward = 10;
         break;
     }
 
@@ -69,12 +79,16 @@ export class EnemyManager {
       speed: speed,
       pathIndex: 0,
       position: { x: startPos.x, y: startPos.y },
+      slowedUntil: 0,
       active: true,
       status: {
         isSlowed: false,
         slowFactor: 1,
         slowTimer: 0
-      }
+      },
+      // Rewards
+      goldReward: goldReward,
+      expReward: expReward
     };
 
     this.enemies.push(newEnemy);
