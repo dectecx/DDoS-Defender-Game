@@ -3,6 +3,7 @@ import { GridManager } from './GridManager';
 import { EnemyManager } from './EnemyManager';
 import { ProjectileManager } from './ProjectileManager';
 import { ExperienceSystem } from './systems/ExperienceSystem';
+import { BuffSystem, BuffType } from './systems/BuffSystem';
 
 /**
  * TowerManager - Tower manager
@@ -13,6 +14,7 @@ export class TowerManager {
   gridManager: GridManager;
   enemyManager: EnemyManager;
   projectileManager: ProjectileManager;
+  buffSystem: BuffSystem;
 
   constructor(
     gridManager: GridManager, 
@@ -22,6 +24,7 @@ export class TowerManager {
     this.gridManager = gridManager;
     this.enemyManager = enemyManager;
     this.projectileManager = projectileManager;
+    this.buffSystem = new BuffSystem();
   }
 
   /**
@@ -51,6 +54,14 @@ export class TowerManager {
     };
     
     this.towers.push(newTower);
+    
+    // Register buff towers and apply their effects
+    if (type === TowerType.CODE_FARMER) {
+      this.buffSystem.registerIncomeTower(newTower.id);
+    } else if (type === TowerType.SUPERVISOR || type === TowerType.SYSTEM_ANALYST) {
+      // Apply area buffs immediately
+      this.updateBuffTowerEffects(newTower);
+    }
   }
 
   /**
@@ -60,11 +71,21 @@ export class TowerManager {
    */
   update(_deltaTime: number, now: number) {
     this.towers.forEach(tower => {
+      // Buff towers don't attack
+      if (tower.type === TowerType.CODE_FARMER || 
+          tower.type === TowerType.SUPERVISOR ||
+          tower.type === TowerType.SYSTEM_ANALYST) {
+        return;
+      }
+
       // If tower is disabled, skip
       if (now < tower.disabledUntil) return;
 
+      // Apply buff effects to tower stats
+      const buffedCooldown = this.getBuffedCooldown(tower);
+      
       // If tower is cooling down, skip
-      if (now - tower.lastFired < tower.cooldown) return;
+      if (now - tower.lastFired < buffedCooldown) return;
 
       const target = this.findTarget(tower);
       if (target) {
@@ -87,7 +108,10 @@ export class TowerManager {
    * @returns Found enemy, or null
    */
   findTarget(tower: Tower): Enemy | null {
-    const rangePx = tower.range * this.gridManager.cellSize;
+    // Apply range buffs
+    const buffedRange = this.getBuffedRange(tower);
+    const rangePx = buffedRange * this.gridManager.cellSize;
+    
     const towerPos = this.gridManager.getCanvasPosition(tower.x, tower.y);
     const towerCenter = {
         x: towerPos.x + this.gridManager.cellSize / 2,
@@ -138,6 +162,17 @@ export class TowerManager {
     // Calculate sell price (70% of total investment)
     const sellPrice = Math.floor(tower.totalInvestment * 0.7);
 
+    // Clean up buff system
+    if (tower.type === TowerType.CODE_FARMER) {
+      this.buffSystem.unregisterIncomeTower(towerId);
+    } else if (tower.type === TowerType.SUPERVISOR || tower.type === TowerType.SYSTEM_ANALYST) {
+      // Remove buffs this tower was providing
+      this.buffSystem.removeBuffsFromSource(towerId);
+    }
+    
+    // Remove buffs applied to this tower
+    this.buffSystem.removeAllBuffs(towerId);
+
     // Remove tower from array
     this.towers = this.towers.filter(t => t.id !== towerId);
 
@@ -178,6 +213,10 @@ export class TowerManager {
             case TowerType.WAF: color = '#ff8800'; break; // Orange
             case TowerType.DPI: color = '#ff00ff'; break; // Magenta
             case TowerType.CACHE: color = '#00ffff'; break; // Cyan
+            // Special Buff Towers
+            case TowerType.CODE_FARMER: color = '#ffd700'; break; // Gold
+            case TowerType.SUPERVISOR: color = '#ff6b6b'; break; // Red
+            case TowerType.SYSTEM_ANALYST: color = '#4ecdc4'; break; // Teal
         }
       }
 
@@ -234,6 +273,18 @@ export class TowerManager {
       case TowerType.CACHE:
         return { range: 3, damage: 5, cooldown: 200, cost: 150 };
       case TowerType.RATE_LIMIT:
+        return { range: 3, damage: 20, cooldown: 500, cost: 100 };
+      // Special Buff Towers
+      case TowerType.CODE_FARMER: {
+        // Dynamic pricing: base 250 + 100 per existing CODE_FARMER
+        const existingCount = this.towers.filter(t => t.type === TowerType.CODE_FARMER).length;
+        const cost = 250 + (existingCount * 100);
+        return { range: 0, damage: 0, cooldown: 999999, cost }; // Passive income, doesn't attack
+      }
+      case TowerType.SUPERVISOR:
+        return { range: 2, damage: 0, cooldown: 999999, cost: 300 }; // Attack speed buff, range = buff area
+      case TowerType.SYSTEM_ANALYST:
+        return { range: 2, damage: 0, cooldown: 999999, cost: 350 }; // Range buff, range = buff area
       default:
         return { range: 3, damage: 20, cooldown: 500, cost: 100 };
     }
@@ -279,5 +330,52 @@ export class TowerManager {
       tower.level,
       'cooldown'
     );
+  }
+
+  /**
+   * Update buff effects for a buff tower (SUPERVISOR or SYSTEM_ANALYST)
+   * @param buffTower The buff tower
+   */
+  private updateBuffTowerEffects(buffTower: Tower) {
+    if (buffTower.type === TowerType.SUPERVISOR) {
+      // Apply attack speed buff (+20% = cooldown * 0.8)
+      this.buffSystem.applyAreaBuffs(
+        buffTower,
+        this.towers,
+        BuffType.ATTACK_SPEED,
+        0.2, // 20% reduction
+        buffTower.range
+      );
+    } else if (buffTower.type === TowerType.SYSTEM_ANALYST) {
+      // Apply range buff (+1 cell)
+      this.buffSystem.applyAreaBuffs(
+        buffTower,
+        this.towers,
+        BuffType.RANGE,
+        1, // +1 cell
+        buffTower.range
+      );
+    }
+  }
+
+  /**
+   * Get buffed cooldown for a tower
+   * @param tower Tower
+   * @returns Cooldown with buffs applied
+   */
+  private getBuffedCooldown(tower: Tower): number {
+    const attackSpeedBuff = this.buffSystem.getTotalBuff(tower.id, BuffType.ATTACK_SPEED);
+    // Attack speed buff reduces cooldown
+    return tower.cooldown * (1 - attackSpeedBuff);
+  }
+
+  /**
+   * Get buffed range for a tower
+   * @param tower Tower
+   * @returns Range with buffs applied
+   */
+  private getBuffedRange(tower: Tower): number {
+    const rangeBuff = this.buffSystem.getTotalBuff(tower.id, BuffType.RANGE);
+    return tower.range + rangeBuff;
   }
 }

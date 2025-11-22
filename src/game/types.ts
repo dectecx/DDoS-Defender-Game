@@ -26,7 +26,11 @@ export const TowerType = {
   RATE_LIMIT: 'RATE_LIMIT',
   WAF: 'WAF',
   DPI: 'DPI',
-  CACHE: 'CACHE'
+  CACHE: 'CACHE',
+  // Special Buff Towers
+  CODE_FARMER: 'CODE_FARMER',     // Passive income
+  SUPERVISOR: 'SUPERVISOR',       // Attack speed buff
+  SYSTEM_ANALYST: 'SYSTEM_ANALYST' // Range buff
 } as const;
 
 export type TowerType = typeof TowerType[keyof typeof TowerType];

@@ -1,6 +1,7 @@
 import { GridManager } from './GridManager';
 import { GameActions } from './GameState';
 import { CellType, TowerType } from './types';
+import type { TowerManager } from './TowerManager';
 
 /**
  * InteractionManager - User interaction manager
@@ -8,9 +9,17 @@ import { CellType, TowerType } from './types';
  */
 export class InteractionManager {
   gridManager: GridManager;
+  towerManager: TowerManager | null = null;
 
   constructor(gridManager: GridManager) {
     this.gridManager = gridManager;
+  }
+
+  /**
+   * Set TowerManager reference for dynamic cost calculation
+   */
+  setTowerManager(tm: TowerManager) {
+    this.towerManager = tm;
   }
 
   /**
@@ -44,19 +53,28 @@ export class InteractionManager {
 
     // If clicking on empty space, try to build
     if (cell.type === CellType.EMPTY) {
-      // Calculate cost based on tower type
+      // Get cost from TowerManager for dynamic pricing (e.g., CODE_FARMER)
       let cost = 100;
-      switch (selectedTowerType) {
-        case TowerType.WAF: cost = 200; break;
-        case TowerType.DPI: cost = 300; break;
-        case TowerType.CACHE: cost = 150; break;
-        case TowerType.RATE_LIMIT: default: cost = 100; break;
+      if (this.towerManager) {
+        const stats = this.towerManager.getBaseStats(selectedTowerType);
+        cost = stats.cost;
+      } else {
+        // Fallback to hardcoded costs if TowerManager not set
+        switch (selectedTowerType) {
+          case TowerType.WAF: cost = 200; break;
+          case TowerType.DPI: cost = 300; break;
+          case TowerType.CACHE: cost = 150; break;
+          case TowerType.CODE_FARMER: cost = 250; break;
+          case TowerType.SUPERVISOR: cost = 300; break;
+          case TowerType.SYSTEM_ANALYST: cost = 350; break;
+          case TowerType.RATE_LIMIT: default: cost = 100; break;
+        }
       }
 
       if (GameActions.spendMoney(cost)) {
         cell.type = CellType.TOWER;
         cell.towerId = crypto.randomUUID();
-        console.log(`Built ${selectedTowerType} at ${gridPos.x}, ${gridPos.y}`);
+        console.log(`Built ${selectedTowerType} at ${gridPos.x}, ${gridPos.y} for ${cost}g`);
         return { action: 'BUILD', x: gridPos.x, y: gridPos.y, type: selectedTowerType };
       } else {
         console.log('Not enough money!');

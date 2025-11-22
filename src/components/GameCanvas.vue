@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { GridManager } from '../game/GridManager';
 import { EnemyManager } from '../game/EnemyManager';
 import { TowerManager } from '../game/TowerManager';
@@ -26,6 +26,7 @@ let interactionManager: InteractionManager | null = null;
 let waveManager: WaveManager | null = null;
 
 let lastTime = 0;
+let incomeAccumulator = 0; // For passive income accumulation
 
 // UI State
 const selectedTower = ref<TowerType>(TowerType.RATE_LIMIT);
@@ -39,6 +40,24 @@ const completedWaveNum = ref(0);
 // Tower Info Panel State
 const showTowerInfo = ref(false);
 const selectedTowerForInfo = ref<Tower | null>(null);
+
+// Dynamic pricing tracking (updated when towers are built/sold)
+const codeFarmerCount = ref(0);
+
+const codeFarmerCost = computed(() => {
+  return 250 + (codeFarmerCount.value * 100);
+});
+
+const passiveIncomeRate = computed(() => {
+  return codeFarmerCount.value * 5;
+});
+
+// Helper to update CODE_FARMER count
+const updateCodeFarmerCount = () => {
+  if (towerManager) {
+    codeFarmerCount.value = towerManager.towers.filter(t => t.type === TowerType.CODE_FARMER).length;
+  }
+};
 
 const resizeCanvas = () => {
   if (!canvasRef.value) return;
@@ -59,6 +78,11 @@ const handleCanvasClick = (event: MouseEvent) => {
   if (result) {
     if (result.action === 'BUILD') {
       towerManager.addTower(result.x, result.y, result.type);
+      
+      // Update CODE_FARMER count for dynamic UI
+      if (result.type === TowerType.CODE_FARMER) {
+        updateCodeFarmerCount();
+      }
     } else if (result.action === 'SELECT') {
       const tower = towerManager.getTowerAt(result.x, result.y);
       if (tower) {
@@ -116,10 +140,26 @@ const loop = (timestamp: number) => {
   lastTime = timestamp;
 
   if (!gameState.isGameOver && !gameState.isVictory) {
+    // Update game systems
     if (waveManager) waveManager.update(deltaTime);
     if (enemyManager) enemyManager.update(deltaTime);
     if (projectileManager) projectileManager.update(deltaTime);
-    if (towerManager) towerManager.update(deltaTime, timestamp);
+    if (towerManager) {
+      towerManager.update(deltaTime, timestamp);
+      
+      // CODE_FARMER passive income (accumulate to handle fractional gold per frame)
+      const passiveIncomePerSec = towerManager.buffSystem.calculatePassiveIncome();
+      if (passiveIncomePerSec > 0) {
+        incomeAccumulator += passiveIncomePerSec * deltaTime;
+        
+        // Award whole gold amounts
+        const goldToAdd = Math.floor(incomeAccumulator);
+        if (goldToAdd > 0) {
+          GameActions.addMoney(goldToAdd);
+          incomeAccumulator -= goldToAdd;
+        }
+      }
+    }
   }
 
   draw();
@@ -144,6 +184,9 @@ onMounted(() => {
     
     // Set up ProjectileManager -> TowerManager for experience awards
     projectileManager.setTowerManager(towerManager);
+    
+    // Set up InteractionManager -> TowerManager for dynamic costs
+    interactionManager.setTowerManager(towerManager);
 
     // Set up wave transition callback
     waveManager.onWaveTransitionStart = (wave, rewards, timeout) => {
@@ -193,10 +236,18 @@ const handleTowerInfoClose = () => {
 const handleTowerSell = (towerId: string) => {
   if (!towerManager) return;
   
+  const tower = towerManager.towers.find(t => t.id === towerId);
+  const wasFarmer = tower?.type === TowerType.CODE_FARMER;
+  
   const refund = towerManager.sellTower(towerId);
   if (refund > 0) {
     GameActions.addMoney(refund);
     console.log(`Tower sold for ${refund}g`);
+    
+    // Update CODE_FARMER count for dynamic UI
+    if (wasFarmer) {
+      updateCodeFarmerCount();
+    }
   }
   
   showTowerInfo.value = false;
@@ -244,6 +295,34 @@ const handleTowerSell = (towerId: string) => {
         >
           Cache ($150)
         </button>
+      </div>
+      <div class="tower-selection" style="margin-top: 10px;">
+        <button 
+          :class="{ active: selectedTower === TowerType.CODE_FARMER }"
+          @click="selectedTower = TowerType.CODE_FARMER"
+          class="buff-tower"
+        >
+          💰 Farmer (${{ codeFarmerCost }})
+        </button>
+        <button 
+          :class="{ active: selectedTower === TowerType.SUPERVISOR }"
+          @click="selectedTower = TowerType.SUPERVISOR"
+          class="buff-tower"
+        >
+          ⚡ Supervisor ($300)
+        </button>
+        <button 
+          :class="{ active: selectedTower === TowerType.SYSTEM_ANALYST }"
+          @click="selectedTower = TowerType.SYSTEM_ANALYST"
+          class="buff-tower"
+        >
+          🎯 Analyst ($350)
+        </button>
+      </div>
+      
+      <!-- Passive Income Display -->
+      <div v-if="passiveIncomeRate > 0" class="income-display">
+        💰 Passive Income: +{{ passiveIncomeRate }}g/sec
       </div>
     </div>
     
@@ -304,5 +383,27 @@ button:hover {
 button.active {
   background: #00ff00;
   color: #000;
+}
+
+.buff-tower {
+  border-color: #ffd700 !important;
+  background: rgba(255, 215, 0, 0.1) !important;
+}
+
+.buff-tower.active {
+  background: #ffd700 !important;
+  color: #000 !important;
+}
+
+.income-display {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: rgba(255, 215, 0, 0.2);
+  border: 1px solid #ffd700;
+  border-radius: 4px;
+  color: #ffd700;
+  font-family: monospace;
+  font-weight: bold;
+  text-align: center;
 }
 </style>
