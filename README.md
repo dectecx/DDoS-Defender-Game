@@ -1,35 +1,84 @@
-# DDoS Defender (MVP)
+# DDoS Defender
 
-**《DDoS Defender 技術架構規格書 v1.0》**
+**《DDoS Defender - Full Product Specification v2.0》**
 
------
+> A tower defense game with a cybersecurity theme. Defend your origin server from DDoS attacks by strategically placing defense towers.
 
-## 1. 設計理念與核心決策
-
-  * **架構模式：** 預留擴充性的模組化設計 (Modular Design)。
-  * **地圖機制：** 基於 2D 陣列的網格系統。MVP 階段讀取預設路徑，未來可切換為動態尋路。
-  * **波數系統：** 設定檔驅動 (Config-Driven)。關卡資料與程式邏輯分離，支援從 JSON/DB 熱載入。
-  * **擴充性預留：**
-      * **多人連線：** 狀態管理層 (State Layer) 需與渲染層 (View Layer) 嚴格分離，以便未來狀態可由 WebSocket 同步。
-      * **技能系統：** 引入「狀態效果 (Status Effect)」介面，支援塔被暈眩（斷電）或敵人被緩速。
+**Project Status**: 🚀 Full Product Development (MVP Complete ✅)
 
 -----
 
-## 2. 實體對照表 (Tech Theme Mapping)
+## 1. Design Philosophy & Core Decisions
 
-我們將抽象的 TD 元素具體化為「Web 伺服器攻防」的情境：
+  * **Architecture**: Modular design with extensibility for future features
+  * **Map System**: 2D grid-based system with JSON-driven layouts
+  * **Wave System**: Configuration-driven with support for complex spawn patterns
+  * **Progression**: Tower upgrades, experience system, and player skill development
+  * **Extensibility**:
+      * **Multiplayer**: State/View separation enables WebSocket synchronization
+      * **Status Effects**: Interface supports tower disables, enemy slows, and future effects
+      * **Content**: JSON-driven enemies, towers, and waves for easy balancing
 
-| 類別 | 代號 | 遊戲內名稱 | 對應 TD 概念 | 特性描述 |
+-----
+
+## 📚 Documentation
+
+- **[Game Design](docs/design/game-flow.md)**: Complete game flow and mechanics
+- **[Enemy Stats](docs/specs/enemy-stats.md)**: All enemy types and specifications
+- **[Tower Stats](docs/specs/tower-stats.md)**: All tower types and upgrade paths  
+- **[Wave Config](docs/specs/wave-config.md)**: Wave progression and balance design
+- **[Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)**: Development progress tracking
+
+-----
+
+## 2. Game Features
+
+### 🎮 Current Features (MVP Complete)
+- ✅ 4 Tower Types (RATE_LIMIT, WAF, DPI, CACHE)
+- ✅ 4 Enemy Types (REQ_STD, REQ_HEAVY, REQ_STREAM, ZERO_DAY Boss)
+- ✅ Wave-based gameplay with JSON configuration
+- ✅ Tower targeting and projectile system
+- ✅ Status effects (Slow, Tower Disable)
+- ✅ Boss mechanics (Blackout skill)
+- ✅ Victory/Game Over conditions
+
+### 🚧 In Development (Phases 7-13)
+- 🔄 **Enhanced Wave System**: Multi-enemy spawning, wave transitions, bonus rewards
+- 🔄 **Tower Upgrades**: Experience system, level progression, stat increases
+- 📋 **Special Towers**: CODE_FARMER (income), SUPERVISOR (attack speed), SA (range)
+- 📋 **Tower Management**: Sell towers, info panel, buff calculations
+- 📋 **UI/UX**: Main menu, pause system, game speed control, settings
+- 📋 **Audio**: Background music and sound effects
+- 📋 **Testing**: Unit tests, integration tests, TDD approach
+
+### 🎯 Planned Features (Post-Launch)
+- Save/Load system
+- Daily challenges
+- Achievements
+- Leaderboards  
+- Multiple maps
+- Custom wave editor
+
+-----
+
+## 3. Entity Mapping (Tech Theme)
+
+Game elements mapped to cybersecurity concepts:
+
+| Category | Code | Name | Concept | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **核心** | `Origin` | **Origin Server** | 基地 (Base) | HP = Server Availability (100%)。歸零即 503 Service Unavailable。 |
-| **敵人** | `Req_Std` | **HTTP Request** | 普通小兵 | 標準血量與速度。 |
-| **敵人** | `Req_Heavy` | **Large Payload** | 坦克 (Tank) | `POST /upload`，血厚移動慢，象徵大檔案上傳塞爆頻寬。 |
-| **敵人** | `Req_Stream` | **Socket Flood** | 刺客 (Fast) | `WebSocket` 連線，血極少但速度極快，且密集生成。 |
-| **BOSS** | `ZeroDay` | **Zero-Day Exploit** | Boss | 擁有技能 `Blackout` (斷電)：使範圍內防禦塔「離線」5 秒。 |
-| **塔** | `RateLimit` | **Rate Limiter** | 箭塔 (Basic) | 單體攻擊，高射速，低成本。 |
-| **塔** | `WAF` | **WAF Node** | 砲塔 (Splash) | 範圍攻擊 (AOE)，用來清理密集的 WebSocket。 |
-| **塔** | `DPI` | **DPI Scanner** | 狙擊 (Sniper) | 深度封包檢測。攻速極慢，但單發傷害極高，專打 Large Payload。 |
-| **塔** | `Cache` | **Redis Cache** | 冰塔 (Slow) | 讓經過的 Request 進入「快取處理」，移動速度降低 50%。 |
+| **Core** | `Origin` | **Origin Server** | Base | HP = Server Availability. 0 HP = 503 Error. |
+| **Enemy** | `Req_Std` | **HTTP Request** | Basic | Standard attack and speed. |
+| **Enemy** | `Req_Heavy` | **Large Payload** | Tank | Slow but high HP. `POST /upload` |
+| **Enemy** | `Req_Stream` | **Socket Flood** | Fast | Low HP, very fast. `WebSocket` spam. |
+| **BOSS** | `ZeroDay` | **Zero-Day Exploit** | Boss | **Blackout** skill: Disables towers for 5s. |
+| **Tower** | `RateLimit` | **Rate Limiter** | Basic | Single target, fast fire rate. |
+| **Tower** | `WAF` | **WAF Node** | AOE | Area damage for swarms. |
+| **Tower** | `DPI` | **DPI Scanner** | Sniper | Slow fire, massive damage. |
+| **Tower** | `Cache` | **Redis Cache** | Slow | Applies 50% slow debuff. |
+| **Tower** | `CodeFarmer` | **碼農** | Economy | Passive gold income. |
+| **Tower** | `Supervisor` | **主管** | Buff | Increases nearby tower attack speed. |
+| **Tower** | `SA` | **System Analyst** | Buff | Increases nearby tower range. |
 
 -----
 
