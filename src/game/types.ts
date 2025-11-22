@@ -1,0 +1,68 @@
+export const CellType = {
+  EMPTY: 'EMPTY',
+  WALL: 'WALL',
+  PATH: 'PATH',
+  TOWER: 'TOWER'
+} as const;
+
+export type CellType = typeof CellType[keyof typeof CellType];
+
+
+export interface Position {
+  x: number;
+  y: number;
+}
+
+export const EnemyType = {
+  REQ_STD: 'REQ_STD',
+  REQ_HEAVY: 'REQ_HEAVY',
+  REQ_STREAM: 'REQ_STREAM',
+  ZERO_DAY: 'ZERO_DAY'
+} as const;
+
+export type EnemyType = typeof EnemyType[keyof typeof EnemyType];
+
+export const TowerType = {
+  RATE_LIMIT: 'RATE_LIMIT',
+  WAF: 'WAF',
+  DPI: 'DPI',
+  CACHE: 'CACHE'
+} as const;
+
+export type TowerType = typeof TowerType[keyof typeof TowerType];
+
+export interface Tower {
+  id: string;
+  type: TowerType;
+  x: number; // Grid X
+  y: number; // Grid Y
+  range: number; // Grid cells
+  damage: number;
+  cooldown: number; // ms
+  lastFired: number; // timestamp
+  cost: number;
+}
+
+export interface Enemy {
+  id: string;
+  type: EnemyType;
+  hp: number;
+  maxHp: number;
+  speed: number; // pixels per second
+  pathIndex: number;
+  position: Position;
+  active: boolean;
+}
+
+export interface Cell {
+  x: number;
+  y: number;
+  type: CellType;
+  towerId: string | null;
+}
+
+export interface GridConfig {
+  width: number;
+  height: number;
+  cellSize: number;
+}
