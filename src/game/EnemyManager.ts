@@ -19,12 +19,35 @@ export class EnemyManager {
 
     const startPos = this.gridManager.getCanvasPosition(startNode.x, startNode.y);
 
+    let hp = 100;
+    let speed = 100;
+    
+    switch (type) {
+      case EnemyType.REQ_HEAVY:
+        hp = 300;
+        speed = 50;
+        break;
+      case EnemyType.REQ_STREAM:
+        hp = 30;
+        speed = 200;
+        break;
+      case EnemyType.ZERO_DAY:
+        hp = 1000;
+        speed = 40;
+        break;
+      case EnemyType.REQ_STD:
+      default:
+        hp = 100;
+        speed = 100;
+        break;
+    }
+
     const newEnemy: Enemy = {
       id: crypto.randomUUID(),
       type: type,
-      hp: 100, // Default for now
-      maxHp: 100,
-      speed: 100, // Pixels per second
+      hp: hp,
+      maxHp: hp,
+      speed: speed,
       pathIndex: 0,
       position: { x: startPos.x, y: startPos.y },
       active: true
@@ -79,10 +102,28 @@ export class EnemyManager {
 
   draw(ctx: CanvasRenderingContext2D) {
     this.enemies.forEach(enemy => {
-      ctx.fillStyle = '#ff0000'; // Red for enemies
+      let color = '#ff0000';
+      let scale = 0.6;
+
+      switch (enemy.type) {
+        case EnemyType.REQ_HEAVY:
+          color = '#880000'; // Dark Red
+          scale = 0.8;
+          break;
+        case EnemyType.REQ_STREAM:
+          color = '#ff8888'; // Light Red
+          scale = 0.4;
+          break;
+        case EnemyType.ZERO_DAY:
+          color = '#800080'; // Purple
+          scale = 0.9;
+          break;
+      }
+
+      ctx.fillStyle = color;
       
       // Draw centered
-      const size = this.gridManager.cellSize * 0.6;
+      const size = this.gridManager.cellSize * scale;
       const offset = (this.gridManager.cellSize - size) / 2;
       
       ctx.fillRect(
@@ -91,6 +132,13 @@ export class EnemyManager {
         size, 
         size
       );
+
+      // Draw HP Bar
+      const hpPercent = enemy.hp / enemy.maxHp;
+      ctx.fillStyle = '#333';
+      ctx.fillRect(enemy.position.x, enemy.position.y - 5, this.gridManager.cellSize, 4);
+      ctx.fillStyle = '#0f0';
+      ctx.fillRect(enemy.position.x, enemy.position.y - 5, this.gridManager.cellSize * hpPercent, 4);
     });
   }
 }

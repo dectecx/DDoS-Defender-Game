@@ -20,16 +20,49 @@ export class TowerManager {
   }
 
   addTower(x: number, y: number, type: TowerType) {
+    let range = 3;
+    let damage = 20;
+    let cooldown = 500;
+    let cost = 100;
+
+    switch (type) {
+      case TowerType.WAF: // AOE
+        range = 2;
+        damage = 10;
+        cooldown = 1000;
+        cost = 200;
+        break;
+      case TowerType.DPI: // Sniper
+        range = 6;
+        damage = 100;
+        cooldown = 2000;
+        cost = 300;
+        break;
+      case TowerType.CACHE: // Slow (Low damage)
+        range = 3;
+        damage = 5;
+        cooldown = 200;
+        cost = 150;
+        break;
+      case TowerType.RATE_LIMIT:
+      default:
+        range = 3;
+        damage = 20;
+        cooldown = 500;
+        cost = 100;
+        break;
+    }
+
     const newTower: Tower = {
       id: crypto.randomUUID(),
       type: type,
       x: x,
       y: y,
-      range: 3, // Grid cells
-      damage: 20,
-      cooldown: 500, // ms
+      range: range,
+      damage: damage,
+      cooldown: cooldown,
       lastFired: 0,
-      cost: 100
+      cost: cost
     };
     this.towers.push(newTower);
   }
@@ -42,11 +75,13 @@ export class TowerManager {
       if (target) {
         // Fire!
         const towerPos = this.gridManager.getCanvasPosition(tower.x, tower.y);
-        // Center of the cell
         const centerPos = {
             x: towerPos.x + this.gridManager.cellSize / 2,
             y: towerPos.y + this.gridManager.cellSize / 2
         };
+        
+        // Special Logic for WAF (AOE) - For now, just spawn a projectile that explodes on impact?
+        // Or instant hit? Let's stick to projectile for consistency, but maybe different color/size.
         
         this.projectileManager.spawnProjectile(centerPos, target.id, tower.damage);
         tower.lastFired = now;
@@ -55,8 +90,6 @@ export class TowerManager {
   }
 
   findTarget(tower: Tower): Enemy | null {
-    // Simple strategy: First enemy in range
-    // Convert range to pixels for distance check
     const rangePx = tower.range * this.gridManager.cellSize;
     const towerPos = this.gridManager.getCanvasPosition(tower.x, tower.y);
     const towerCenter = {
@@ -64,7 +97,6 @@ export class TowerManager {
         y: towerPos.y + this.gridManager.cellSize / 2
     };
 
-    // Filter enemies in range
     const enemiesInRange = this.enemyManager.enemies.filter(enemy => {
       if (!enemy.active) return false;
       const dx = enemy.position.x - towerCenter.x;
@@ -74,33 +106,39 @@ export class TowerManager {
 
     if (enemiesInRange.length === 0) return null;
 
-    // Sort by path index (furthest along path)
-    return enemiesInRange.sort((a, b) => b.pathIndex - a.pathIndex)[0] ?? null;
+    // Targeting Strategy
+    if (tower.type === TowerType.DPI) {
+        // Strongest first
+        return enemiesInRange.sort((a, b) => b.hp - a.hp)[0] || null;
+    }
+
+    // Default: First along path
+    return enemiesInRange.sort((a, b) => b.pathIndex - a.pathIndex)[0] || null;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
     this.towers.forEach(tower => {
       const pos = this.gridManager.getCanvasPosition(tower.x, tower.y);
       
-      // Draw Tower Base
-      ctx.fillStyle = '#4488ff'; // Blue tower
+      let color = '#4488ff';
+      switch (tower.type) {
+        case TowerType.WAF: color = '#ff8800'; break; // Orange
+        case TowerType.DPI: color = '#ff00ff'; break; // Magenta
+        case TowerType.CACHE: color = '#00ffff'; break; // Cyan
+      }
+
+      ctx.fillStyle = color;
       ctx.fillRect(
         pos.x + 5, 
         pos.y + 5, 
         this.gridManager.cellSize - 10, 
         this.gridManager.cellSize - 10
       );
-
-      // Draw Range (Optional, maybe only on hover)
-      // ctx.strokeStyle = 'rgba(68, 136, 255, 0.2)';
-      // ctx.beginPath();
-      // ctx.arc(
-      //   pos.x + this.gridManager.cellSize/2, 
-      //   pos.y + this.gridManager.cellSize/2, 
-      //   tower.range * this.gridManager.cellSize, 
-      //   0, Math.PI*2
-      // );
-      // ctx.stroke();
+      
+      // Label
+      ctx.fillStyle = '#fff';
+      ctx.font = '10px monospace';
+      ctx.fillText(tower.type.substring(0, 3), pos.x + 10, pos.y + 30);
     });
   }
 }

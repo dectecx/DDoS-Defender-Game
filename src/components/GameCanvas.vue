@@ -5,6 +5,7 @@ import { EnemyManager } from '../game/EnemyManager';
 import { TowerManager } from '../game/TowerManager';
 import { ProjectileManager } from '../game/ProjectileManager';
 import { InteractionManager } from '../game/InteractionManager';
+import { WaveManager } from '../game/WaveManager';
 import { gameState } from '../game/GameState';
 import { EnemyType } from '../game/types';
 
@@ -18,9 +19,9 @@ let enemyManager: EnemyManager | null = null;
 let towerManager: TowerManager | null = null;
 let projectileManager: ProjectileManager | null = null;
 let interactionManager: InteractionManager | null = null;
+let waveManager: WaveManager | null = null;
 
 let lastTime = 0;
-let spawnTimer = 0;
 
 const resizeCanvas = () => {
   if (!canvasRef.value) return;
@@ -59,9 +60,10 @@ const draw = () => {
   ctx.fillStyle = '#00ff00';
   ctx.font = '20px monospace';
   ctx.fillText('DDoS Defender - System Online', 20, 40);
-  ctx.fillText(`Enemies: ${enemyManager.enemies.length}`, 20, 70);
-  ctx.fillText(`Money: $${gameState.money}`, 20, 100);
-  ctx.fillText(`HP: ${gameState.hp}%`, 20, 130);
+  ctx.fillText(`Wave: ${gameState.wave}`, 20, 70);
+  ctx.fillText(`Enemies: ${enemyManager.enemies.length}`, 20, 100);
+  ctx.fillText(`Money: $${gameState.money}`, 20, 130);
+  ctx.fillText(`HP: ${gameState.hp}%`, 20, 160);
   
   if (gameState.isGameOver) {
     ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
@@ -80,17 +82,8 @@ const loop = (timestamp: number) => {
   lastTime = timestamp;
 
   if (!gameState.isGameOver) {
-    if (enemyManager) {
-      enemyManager.update(deltaTime);
-      
-      // Temporary Spawn Logic
-      spawnTimer += deltaTime;
-      if (spawnTimer > 2) {
-        enemyManager.spawnEnemy(EnemyType.REQ_STD);
-        spawnTimer = 0;
-      }
-    }
-    
+    if (waveManager) waveManager.update(deltaTime);
+    if (enemyManager) enemyManager.update(deltaTime);
     if (projectileManager) projectileManager.update(deltaTime);
     if (towerManager) towerManager.update(deltaTime, timestamp);
   }
@@ -109,6 +102,7 @@ onMounted(() => {
     projectileManager = new ProjectileManager(enemyManager);
     towerManager = new TowerManager(gridManager, enemyManager, projectileManager);
     interactionManager = new InteractionManager(gridManager);
+    waveManager = new WaveManager(enemyManager);
 
     window.addEventListener('resize', resizeCanvas);
     canvasRef.value.addEventListener('click', handleCanvasClick);

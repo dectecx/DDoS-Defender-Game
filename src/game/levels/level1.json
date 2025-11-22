@@ -1,0 +1,29 @@
+{
+  "levelId": 1,
+  "mapWidth": 20,
+  "mapHeight": 12,
+  "initialResources": 500,
+  "waves": [
+    {
+      "waveId": 1,
+      "enemyType": "REQ_STD",
+      "count": 5,
+      "spawnInterval": 1500,
+      "delayBeforeWave": 2000
+    },
+    {
+      "waveId": 2,
+      "enemyType": "REQ_HEAVY",
+      "count": 3,
+      "spawnInterval": 3000,
+      "delayBeforeWave": 5000
+    },
+    {
+      "waveId": 3,
+      "enemyType": "REQ_STREAM",
+      "count": 10,
+      "spawnInterval": 500,
+      "delayBeforeWave": 5000
+    }
+  ]
+}
