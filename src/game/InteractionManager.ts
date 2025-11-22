@@ -1,10 +1,11 @@
 import { GridManager } from './GridManager';
 import { GameActions } from './GameState';
 import { CellType, TowerType } from './types';
+import type { Tower } from './types';
 
 /**
  * InteractionManager - User interaction manager
- * Handles mouse clicks on the grid and tower placement logic
+ * Handles mouse clicks on the grid for tower placement and selection
  */
 export class InteractionManager {
   gridManager: GridManager;
@@ -15,20 +16,39 @@ export class InteractionManager {
 
   /**
    * Handle a click on the canvas
-   * @param canvasX Canvas X position
+   * @param canvasX Canvas X position  
    * @param canvasY Canvas Y position
    * @param selectedTowerType Tower type to build
-   * @returns Build action result or null
+   * @param mode Interaction mode: 'build' or 'select'
+   * @returns Action result or null
    */
-  handleClick(canvasX: number, canvasY: number, selectedTowerType: TowerType) {
+  handleClick(
+    canvasX: number, 
+    canvasY: number, 
+    selectedTowerType: TowerType,
+    mode: 'build' | 'select' = 'build'
+  ): { action: 'BUILD' | 'SELECT', x: number, y: number, type: TowerType } | null {
     const gridPos = this.gridManager.getGridPosition(canvasX, canvasY);
     
-    if (!this.gridManager.isValidPosition(gridPos)) return;
+    if (!this.gridManager.isValidPosition(gridPos)) return null;
 
     const cell = this.gridManager.grid[gridPos.y]?.[gridPos.x];
+    if (!cell) return null;
 
-    if (!cell) return;
+    // Select mode - return tower position if clicked on tower
+    if (mode === 'select') {
+      if (cell.type === CellType.TOWER) {
+        return {
+          action: 'SELECT',
+          x: gridPos.x,
+          y: gridPos.y,
+          type: selectedTowerType // Not used in select mode
+        };
+      }
+      return null;
+    }
 
+    // Build mode - try to build tower
     if (cell.type === CellType.EMPTY) {
       // Calculate cost based on tower type
       let cost = 100;

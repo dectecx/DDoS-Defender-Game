@@ -159,4 +159,30 @@ export class GridManager {
   isValidPosition(pos: Position): boolean {
     return pos.x >= 0 && pos.x < this.width && pos.y >= 0 && pos.y < this.height;
   }
+
+  /**
+   * Get cell at specific grid position
+   * @param x Grid X coordinate
+   * @param y Grid Y coordinate
+   * @returns Cell if found, null otherwise
+   */
+  getCell(x: number, y: number): Cell | null {
+    return this.grid[y]?.[x] || null;
+  }
+
+  /**
+   * Set cell type at specific grid position (Phase 8.2)
+   * @param x Grid X coordinate
+   * @param y Grid Y coordinate
+   * @param type New cell type
+   */
+  setCell(x: number, y: number, type: CellType) {
+    const cell = this.grid[y]?.[x];
+    if (cell) {
+      cell.type = type;
+      if (type === CellType.EMPTY) {
+        cell.towerId = null;
+      }
+    }
+  }
 }

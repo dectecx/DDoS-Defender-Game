@@ -128,6 +128,38 @@ export class TowerManager {
   }
 
   /**
+   * Sell a tower (Phase 8.2)
+   * @param towerId Tower ID to sell
+   * @returns Gold refunded, or 0 if tower not found
+   */
+  sellTower(towerId: string): number {
+    const tower = this.towers.find(t => t.id === towerId);
+    if (!tower) return 0;
+
+    // Calculate sell price (70% of total investment)
+    const sellPrice = Math.floor(tower.totalInvestment * 0.7);
+
+    // Remove tower from array
+    this.towers = this.towers.filter(t => t.id !== towerId);
+
+    // Clear grid cell
+    this.gridManager.setCell(tower.x, tower.y, 'EMPTY');
+
+    console.log(`Tower ${towerId} sold for ${sellPrice}g`);
+    return sellPrice;
+  }
+
+  /**
+   * Get tower at specific grid position (Phase 8.2)
+   * @param gridX Grid X coordinate
+   * @param gridY Grid Y coordinate
+   * @returns Tower if found, null otherwise
+   */
+  getTowerAt(gridX: number, gridY: number): Tower | null {
+    return this.towers.find(t => t.x === gridX && t.y === gridY) || null;
+  }
+
+  /**
    * Draw all towers
    * @param ctx Canvas rendering context
    */
