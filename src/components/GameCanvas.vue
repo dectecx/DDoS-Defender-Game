@@ -12,6 +12,7 @@ import type { Tower } from '../game/types';
 import level1 from '../game/levels/level1.json';
 import WaveTransition from './WaveTransition.vue';
 import TowerInfoPanel from './TowerInfoPanel.vue';
+import { audioManager, SoundEffect, BackgroundMusic } from '../game/AudioManager';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
@@ -27,6 +28,7 @@ let waveManager: WaveManager | null = null;
 
 let lastTime = 0;
 let incomeAccumulator = 0; // For passive income accumulation
+let audioStarted = false; // Track if audio has been started (browser autoplay policy)
 
 // UI State
 const selectedTower = ref<TowerType>(TowerType.RATE_LIMIT);
@@ -69,6 +71,12 @@ const resizeCanvas = () => {
 const handleCanvasClick = (event: MouseEvent) => {
   if (!interactionManager || !canvasRef.value || !towerManager) return;
   
+  // Start audio on first user interaction (browser autoplay policy)
+  if (!audioStarted) {
+    audioManager.playBGM(BackgroundMusic.GAMEPLAY);
+    audioStarted = true;
+  }
+  
   const rect = canvasRef.value.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
@@ -78,6 +86,7 @@ const handleCanvasClick = (event: MouseEvent) => {
   if (result) {
     if (result.action === 'BUILD') {
       towerManager.addTower(result.x, result.y, result.type);
+      audioManager.playSFX(SoundEffect.TOWER_BUILD);
       
       // Update CODE_FARMER count for dynamic UI
       if (result.type === TowerType.CODE_FARMER) {
@@ -224,6 +233,7 @@ const handleWaveTransitionComplete = (bonusGold: number) => {
   showWaveTransition.value = false;
   if (waveManager) {
     waveManager.startNextWave(bonusGold);
+    audioManager.playSFX(SoundEffect.WAVE_START);
   }
 };
 
@@ -247,6 +257,7 @@ const handleTowerSell = (towerId: string) => {
   const refund = towerManager.sellTower(towerId);
   if (refund > 0) {
     GameActions.addMoney(refund);
+    audioManager.playSFX(SoundEffect.TOWER_SELL);
     console.log(`Tower sold for ${refund}g`);
     
     // Update CODE_FARMER count for dynamic UI
