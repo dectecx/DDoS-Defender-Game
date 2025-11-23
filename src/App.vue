@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import GameCanvas from './components/GameCanvas.vue';
+import { RouterView } from 'vue-router';
+// App is now the router container
 </script>
 
 <template>
-  <GameCanvas />
+  <RouterView />
 </template>
 
 <style>
