@@ -37,11 +37,23 @@
           </div>
           <div class="stat-row">
             <span class="stat-label">🎯 Range</span>
-            <span class="stat-value">{{ tower.range.toFixed(1) }} cells</span>
+            <span class="stat-value">
+              {{ tower.range.toFixed(1) }}
+              <span v-if="rangeBuff > 0" class="buff-bonus">
+                +{{ (rangeBuff * 100).toFixed(0) }}% (+{{ rangeBuff.toFixed(1) }})
+              </span>
+              {{ rangeBuff > 0 ? ` = ${buffedRange.toFixed(1)}` : '' }} cells
+            </span>
           </div>
           <div class="stat-row">
             <span class="stat-label">⚡ Attack Speed</span>
-            <span class="stat-value">{{ (1000 / tower.cooldown).toFixed(2) }}/s</span>
+            <span class="stat-value">
+              {{ (1000 / tower.cooldown).toFixed(2) }}/s
+              <span v-if="attackSpeedBuff > 0" class="buff-bonus">
+                +{{ (attackSpeedBuff * 100).toFixed(0) }}%
+              </span>
+              {{ attackSpeedBuff > 0 ? ` = ${(1000 / buffedCooldown).toFixed(2)}/s` : '' }}
+            </span>
           </div>
           <div class="stat-row">
             <span class="stat-label">💰 Total Investment</span>
@@ -70,10 +82,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Tower, TowerType } from '../game/types';
+import type { TowerManager } from '../game/TowerManager';
+import { BuffType } from '../game/systems/BuffSystem';
 
 interface Props {
   show: boolean;
   tower: Tower | null;
+  towerManager: TowerManager | null;
 }
 
 interface Emits {
@@ -83,6 +98,27 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+
+// Buff calculations
+const rangeBuff = computed(() => {
+  if (!props.tower || !props.towerManager) return 0;
+  return props.towerManager.buffSystem.getTotalBuff(props.tower.id, BuffType.RANGE);
+});
+
+const attackSpeedBuff = computed(() => {
+  if (!props.tower || !props.towerManager) return 0;
+  return props.towerManager.buffSystem.getTotalBuff(props.tower.id, BuffType.ATTACK_SPEED);
+});
+
+const buffedRange = computed(() => {
+  if (!props.tower) return 0;
+  return props.tower.range + rangeBuff.value;
+});
+
+const buffedCooldown = computed(() => {
+  if (!props.tower) return 0;
+  return props.tower.cooldown * (1 - attackSpeedBuff.value);
+});
 
 const expPercentage = computed(() => {
   if (!props.tower) return 0;
@@ -109,7 +145,10 @@ const getTowerName = (type: TowerType): string => {
     RATE_LIMIT: 'Rate Limiter',
     WAF: 'Web Application Firewall',
     DPI: 'Deep Packet Inspector',
-    CACHE: 'Cache Server'
+    CACHE: 'Cache Server',
+    CODE_FARMER: 'Code Farmer',
+    SUPERVISOR: 'Supervisor',
+    SYSTEM_ANALYST: 'System Analyst'
   };
   return names[type] || type;
 };
@@ -119,7 +158,10 @@ const getTowerDescription = (type: TowerType): string => {
     RATE_LIMIT: 'Balanced defense tower with moderate damage and range. Good all-around choice for any position.',
     WAF: 'Area-of-effect tower that deals splash damage. Best placed at choke points where enemies cluster.',
     DPI: 'High-damage sniper tower with extended range. Targets enemies with the most HP first.',
-    CACHE: 'Fast-attacking tower that slows enemies. Reduces enemy movement speed by 50% for 3 seconds.'
+    CACHE: 'Fast-attacking tower that slows enemies. Reduces enemy movement speed by 50% for 3 seconds.',
+    CODE_FARMER: 'Generates passive income of 5 gold per second. Cost increases with each farmer built.',
+    SUPERVISOR: 'Buffs nearby towers with +20% attack speed (stacks up to 2 times). Range: 2 cells.',
+    SYSTEM_ANALYST: 'Buffs nearby towers with +1 cell range (stacks up to 2 times). Range: 2 cells.'
   };
   return descriptions[type] || 'Tower description';
 };
@@ -303,6 +345,13 @@ const getTowerDescription = (type: TowerType): string => {
 
 .stat-value.highlight {
   color: #ffd700;
+}
+
+.buff-bonus {
+  color: #00ff88;
+  font-size: 12px;
+  margin-left: 4px;
+  font-weight: normal;
 }
 
 /* Actions Section */

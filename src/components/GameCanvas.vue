@@ -330,6 +330,7 @@ const handleTowerSell = (towerId: string) => {
     <TowerInfoPanel
       :show="showTowerInfo"
       :tower="selectedTowerForInfo"
+      :towerManager="towerManager"
       @close="handleTowerInfoClose"
       @sell="handleTowerSell"
     />
