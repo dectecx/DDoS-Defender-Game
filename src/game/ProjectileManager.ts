@@ -2,6 +2,7 @@ import { EnemyManager } from './EnemyManager';
 import type { TowerManager } from './TowerManager';
 import type { Enemy, Position } from './types';
 import { GameActions } from './GameState';
+import { GameConfig } from '../config/game.config';
 
 /**
  * Projectile interface - represents a bullet/attack projectile
@@ -54,7 +55,7 @@ export class ProjectileManager {
       targetId: target.id,
       targetX: target.position.x, // Lock on to current position
       targetY: target.position.y,
-      speed: 400, // pixels per second
+      speed: GameConfig.projectile.speed,
       damage: damage,
       active: true,
       ownerId: ownerId // Track which tower fired this

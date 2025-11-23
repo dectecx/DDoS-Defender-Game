@@ -4,6 +4,7 @@ import { EnemyManager } from './EnemyManager';
 import { ProjectileManager } from './ProjectileManager';
 import { ExperienceSystem } from './systems/ExperienceSystem';
 import { BuffSystem, BuffType } from './systems/BuffSystem';
+import { TowerConfig, TowerPricing } from '../config/towers.config';
 
 /**
  * TowerManager - Tower manager
@@ -152,6 +153,7 @@ export class TowerManager {
 
   /**
    * Sell a tower
+   * Formula: sellPrice = tower.totalInvestment * TowerPricing.sellPriceRatio
    * @param towerId Tower ID to sell
    * @returns Gold refunded, or 0 if tower not found
    */
@@ -160,7 +162,7 @@ export class TowerManager {
     if (!tower) return 0;
 
     // Calculate sell price (70% of total investment)
-    const sellPrice = Math.floor(tower.totalInvestment * 0.7);
+    const sellPrice = Math.floor(tower.totalInvestment * TowerPricing.sellPriceRatio);
 
     // Clean up buff system
     if (tower.type === TowerType.CODE_FARMER) {
@@ -314,29 +316,23 @@ export class TowerManager {
     cooldown: number;
     cost: number;
   } {
-    switch (type) {
-      case TowerType.WAF:
-        return { range: 2, damage: 10, cooldown: 1000, cost: 200 };
-      case TowerType.DPI:
-        return { range: 6, damage: 100, cooldown: 2000, cost: 300 };
-      case TowerType.CACHE:
-        return { range: 3, damage: 5, cooldown: 200, cost: 150 };
-      case TowerType.RATE_LIMIT:
-        return { range: 3, damage: 20, cooldown: 500, cost: 100 };
-      // Special Buff Towers
-      case TowerType.CODE_FARMER: {
-        // Dynamic pricing: base 250 + 100 per existing CODE_FARMER
-        const existingCount = this.towers.filter(t => t.type === TowerType.CODE_FARMER).length;
-        const cost = 250 + (existingCount * 100);
-        return { range: 0, damage: 0, cooldown: 999999, cost }; // Passive income, doesn't attack
-      }
-      case TowerType.SUPERVISOR:
-        return { range: 2, damage: 0, cooldown: 999999, cost: 300 }; // Attack speed buff, range = buff area
-      case TowerType.SYSTEM_ANALYST:
-        return { range: 2, damage: 0, cooldown: 999999, cost: 350 }; // Range buff, range = buff area
-      default:
-        return { range: 3, damage: 20, cooldown: 500, cost: 100 };
+    // Get config for this tower type
+    const config = TowerConfig[type];
+    
+    // Handle dynamic pricing for CODE_FARMER
+    if (type === TowerType.CODE_FARMER) {
+      const existingCount = this.towers.filter(t => t.type === TowerType.CODE_FARMER).length;
+      const cost = config.baseCost + (existingCount * TowerPricing.codeFarmerIncrement);
+      return { range: config.range, damage: config.damage, cooldown: config.cooldown, cost };
     }
+    
+    // Return regular stats from config
+    return {
+      range: config.range,
+      damage: config.damage,
+      cooldown: config.cooldown,
+      cost: config.baseCost
+    };
   }
 
   /**

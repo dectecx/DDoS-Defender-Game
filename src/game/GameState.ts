@@ -1,4 +1,5 @@
 import { reactive } from 'vue';
+import { GameConfig } from '../config/game.config';
 
 /**
  * GameState interface - Global game state
@@ -17,9 +18,9 @@ export interface GameState {
  * Reactive game state object
  */
 export const gameState = reactive<GameState>({
-  money: 500, // Initial resources
-  hp: 100,
-  maxHp: 100,
+  money: GameConfig.player.startingMoney,
+  hp: GameConfig.player.startingHP,
+  maxHp: GameConfig.player.maxHP,
   wave: 1,
   score: 0,
   isGameOver: false,

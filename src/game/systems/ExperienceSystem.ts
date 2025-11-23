@@ -1,4 +1,5 @@
 import type { Tower } from '../types';
+import { ExperienceConfig } from '../../config/experience.config';
 
 /**
  * ExperienceSystem - Manages tower leveling and stat progression
@@ -7,21 +8,24 @@ export class ExperienceSystem {
   /**
    * Maximum tower level
    */
-  static readonly MAX_LEVEL = 10;
+  static readonly MAX_LEVEL = ExperienceConfig.maxLevel;
 
   /**
    * Calculate experience required for next level
-   * Formula: 50 * level^1.5
+   * Formula: baseExpRequired * expScaling^(level-1)
    * @param level Current level
    * @returns Experience required for next level
    */
   static calculateMaxExp(level: number): number {
     if (level >= this.MAX_LEVEL) return Infinity;
-    return Math.floor(50 * Math.pow(level, 1.5));
+    return Math.floor(
+      ExperienceConfig.baseExpRequired * Math.pow(ExperienceConfig.expScaling, level - 1)
+    );
   }
 
   /**
    * Calculate stat value after level increases
+   * Formula: baseValue * statGrowth[type]^(level-1)
    * @param baseValue Base stat value (at level 1)
    * @param level Current level
    * @param type Stat type to calculate
@@ -32,13 +36,8 @@ export class ExperienceSystem {
     level: number,
     type: 'damage' | 'range' | 'cooldown'
   ): number {
-    const multipliers = {
-      damage: 1.05,    // +5% per level
-      range: 1.02,     // +2% per level
-      cooldown: 0.97   // -3% per level (lower is better)
-    };
-
-    return baseValue * Math.pow(multipliers[type], level - 1);
+    const multiplier = ExperienceConfig.statGrowth[type];
+    return baseValue * Math.pow(multiplier, level - 1);
   }
 
   /**
@@ -88,6 +87,7 @@ export class ExperienceSystem {
 
   /**
    * Calculate total stats boost from levels
+   * Formula: baseValue * statGrowth[type]^(level-1)
    * @param level Current level
    * @returns Object with multipliers for each stat
    */
@@ -96,10 +96,13 @@ export class ExperienceSystem {
     range: number;
     cooldown: number;
   } {
+    const baseDamage = ExperienceConfig.statGrowth.damage;
+    const baseRange = ExperienceConfig.statGrowth.range;
+    const baseCooldown = ExperienceConfig.statGrowth.cooldown;
     return {
-      damage: Math.pow(1.05, level - 1),
-      range: Math.pow(1.02, level - 1),
-      cooldown: Math.pow(0.97, level - 1)
+      damage: Math.pow(baseDamage, level - 1),
+      range: Math.pow(baseRange, level - 1),
+      cooldown: Math.pow(baseCooldown, level - 1)
     };
   }
 }

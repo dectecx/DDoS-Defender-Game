@@ -13,6 +13,7 @@ import level1 from '../game/levels/level1.json';
 import WaveTransition from './WaveTransition.vue';
 import TowerInfoPanel from './TowerInfoPanel.vue';
 import { audioManager, SoundEffect, BackgroundMusic } from '../game/AudioManager';
+import { GameConfig } from '../config/game.config';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
@@ -162,7 +163,7 @@ const loop = (timestamp: number) => {
       towerManager.update(deltaTime, timestamp);
       
       // CODE_FARMER passive income (accumulate to handle fractional gold per frame)
-      const passiveIncomePerSec = towerManager.buffSystem.calculatePassiveIncome();
+      const passiveIncomePerSec = towerManager.buffSystem.getPassiveIncome();
       if (passiveIncomePerSec > 0) {
         incomeAccumulator += passiveIncomePerSec * deltaTime;
         
@@ -185,7 +186,11 @@ onMounted(() => {
     ctx = canvasRef.value.getContext('2d');
     
     // Initialize Systems
-    gridManager = new GridManager({ width: 20, height: 12, cellSize: 64 });
+    gridManager = new GridManager({ 
+      width: GameConfig.grid.width, 
+      height: GameConfig.grid.height, 
+      cellSize: GameConfig.grid.cellSize 
+    });
     gridManager.initialize(level1.mapLayout);
     enemyManager = new EnemyManager(gridManager);
     projectileManager = new ProjectileManager(enemyManager);

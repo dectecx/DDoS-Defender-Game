@@ -1,4 +1,5 @@
 import type { Tower } from '../types';
+import { BuffConfig } from '../../config/buffs.config';
 
 /**
  * Buff types that can be applied to towers
@@ -135,12 +136,10 @@ export class BuffSystem {
 
   /**
    * Calculate total passive income
-   * Each CODE_FARMER provides fixed 5 gold/sec
-   * @returns Gold per second
+   * @returns Passive income per second
    */
-  calculatePassiveIncome(): number {
-    const count = this.incomeTowers.size;
-    return count * 5; // 5 gold/sec per tower
+  getPassiveIncome(): number {
+    return this.incomeTowers.size * BuffConfig.passiveIncome.goldPerSecond;
   }
 
   /**

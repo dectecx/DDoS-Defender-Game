@@ -1,3 +1,5 @@
+import { AudioConfig } from '../config/audio.config';
+
 /**
  * AudioManager - Singleton class for managing all game audio
  * Handles sound effects, background music, volume control, and audio pooling
@@ -42,21 +44,21 @@ export class AudioManager {
   
   // Settings
   private settings: AudioSettings = {
-    masterVolume: 1.0,
-    sfxVolume: 1.0,
-    bgmVolume: 0.6,
+    masterVolume: AudioConfig.volumes.master,
+    sfxVolume: AudioConfig.volumes.sfx,
+    bgmVolume: AudioConfig.volumes.bgm,
     isMuted: false
   };
   
   // Audio file paths
-  private readonly SFX_BASE_PATH = '/audio/sfx/';
-  private readonly BGM_BASE_PATH = '/audio/bgm/';
+  private readonly SFX_BASE_PATH = AudioConfig.paths.sfx;
+  private readonly BGM_BASE_PATH = AudioConfig.paths.bgm;
   
   // Pool size for each sound effect
-  private readonly POOL_SIZE = 3;
+  private readonly POOL_SIZE = AudioConfig.poolSize;
   
-  // Flag to track if using placeholder mode - set to false to use real audio
-  private usePlaceholders = false;
+  // Flag to track if using placeholder mode
+  private usePlaceholders: boolean = AudioConfig.usePlaceholders;
 
   private constructor() {
     this.loadSettings();
