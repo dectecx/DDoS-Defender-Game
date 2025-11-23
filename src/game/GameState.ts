@@ -80,5 +80,18 @@ export const GameActions = {
    */
   nextWave() {
     gameState.wave++;
+  },
+  
+  /**
+   * Reset game state for a new game
+   */
+  resetGame() {
+    gameState.money = GameConfig.player.startingMoney;
+    gameState.hp = GameConfig.player.startingHP;
+    gameState.maxHp = GameConfig.player.maxHP;
+    gameState.wave = 1;
+    gameState.score = 0;
+    gameState.isGameOver = false;
+    gameState.isVictory = false;
   }
 };
