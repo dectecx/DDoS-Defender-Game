@@ -106,6 +106,11 @@ const draw = () => {
   enemyManager.draw(ctx);
   projectileManager.draw(ctx);
   
+  // Draw range indicator for selected tower
+  if (selectedTowerForInfo.value) {
+    towerManager.drawRangeIndicator(ctx, selectedTowerForInfo.value.id);
+  }
+  
   // Draw UI Overlay (Canvas part)
   ctx.fillStyle = '#00ff00';
   ctx.font = '20px monospace';

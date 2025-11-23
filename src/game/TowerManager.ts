@@ -255,6 +255,55 @@ export class TowerManager {
   }
 
   /**
+   * Draw range indicator for a specific tower
+   * @param ctx Canvas context
+   * @param towerId Tower ID to show range for
+   */
+  drawRangeIndicator(ctx: CanvasRenderingContext2D, towerId: string) {
+    const tower = this.towers.find(t => t.id === towerId);
+    if (!tower) return;
+
+    const towerPos = this.gridManager.getCanvasPosition(tower.x, tower.y);
+    const centerX = towerPos.x + this.gridManager.cellSize / 2;
+    const centerY = towerPos.y + this.gridManager.cellSize / 2;
+
+    // Determine range and color based on tower type
+    let range = tower.range;
+    let color = '#00ff00';
+    let label = 'Attack Range';
+
+    if (tower.type === TowerType.SUPERVISOR || tower.type === TowerType.SYSTEM_ANALYST) {
+      color = '#ffd700';
+      label = 'Buff Range';
+    } else if (tower.type === TowerType.CODE_FARMER) {
+      return; // CODE_FARMER has no range
+    } else {
+      range = this.getBuffedRange(tower);
+    }
+
+    const rangePx = range * this.gridManager.cellSize;
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color + '1a';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, rangePx, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.fillStyle = color;
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, centerX, centerY - rangePx - 10);
+
+    ctx.restore();
+  }
+
+  /**
    * Get base stats for a tower type
    * @param type Tower type
    * @returns Base stats object

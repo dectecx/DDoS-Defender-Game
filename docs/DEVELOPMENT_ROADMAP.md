@@ -106,18 +106,18 @@ Last Updated: 2025-11-22
   - [x] Integration with GameCanvas
   - [x] Smart click detection (auto-detect towers)
 
-#### In Progress �
-- [ ] **8.4 Special Buff Towers** ← CURRENT
-  - [ ] Add new TowerType enums
-  - [ ] Create BuffSystem.ts
-  - [ ] CODE_FARMER (passive gold income)
-  - [ ] SUPERVISOR (attack speed buff)
-  - [ ] SYSTEM_ANALYST (range buff)
-  - [ ] Buff stacking logic
-  - [ ] Visual buff indicators
+- [x] **8.4 Special Buff Towers**
+  - [x] CODE_FARMER tower (passive income, dynamic pricing)
+  - [x] SUPERVISOR tower (attack speed buff)
+  - [x] SYSTEM_ANALYST tower (range buff)
+  - [x] BuffSystem class implementation
+  - [x] Buff stacking logic (max 2 stacks)
+  - [x] Passive income UI display
+  - [x] Buff bonus display in Tower Info Panel
+  - [x] Range indicators for towers
+  - [x] Documentation (buff-system.md)
 
-**Started**: 2025-11-22  
-**Expected Completion**: 2025-11-24
+**Completed**: 2025-11-23
 
 ---
 

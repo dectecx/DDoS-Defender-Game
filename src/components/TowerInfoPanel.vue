@@ -174,24 +174,34 @@ const getTowerDescription = (type: TowerType): string => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: transparent;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-end;
   z-index: 1000;
-  backdrop-filter: blur(4px);
 }
 
 .tower-info-panel {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border: 2px solid #0f3460;
-  border-radius: 12px;
+  border-left: 2px solid #00d4ff;
   padding: 24px;
-  width: 420px;
+  width: 400px;
   max-width: 90vw;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  height: 100vh;
+  overflow-y: auto;
+  box-shadow: -4px 0 20px rgba(0, 212, 255, 0.3);
   color: #e0e0e0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 /* Header */
