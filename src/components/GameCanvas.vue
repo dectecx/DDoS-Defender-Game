@@ -12,6 +12,7 @@ import type { Tower } from '../game/types';
 import level1 from '../game/levels/level1.json';
 import WaveTransition from './WaveTransition.vue';
 import TowerInfoPanel from './TowerInfoPanel.vue';
+import PauseMenu from './PauseMenu.vue';
 import { audioManager, SoundEffect, BackgroundMusic } from '../game/AudioManager';
 import { GameConfig } from '../config/game.config';
 
@@ -33,6 +34,7 @@ let audioStarted = false; // Track if audio has been started (browser autoplay p
 
 // UI State
 const selectedTower = ref<TowerType>(TowerType.RATE_LIMIT);
+const isPaused = ref(false);
 
 // Wave Transition State
 const showWaveTransition = ref(false);
@@ -154,7 +156,7 @@ const loop = (timestamp: number) => {
   const deltaTime = (timestamp - lastTime) / 1000;
   lastTime = timestamp;
 
-  if (!gameState.isGameOver && !gameState.isVictory) {
+  if (!gameState.isGameOver && !gameState.isVictory && !isPaused.value) {
     // Update game systems
     if (waveManager) waveManager.update(deltaTime);
     if (enemyManager) enemyManager.update(deltaTime);
@@ -217,6 +219,7 @@ onMounted(() => {
 
     window.addEventListener('resize', resizeCanvas);
     canvasRef.value.addEventListener('click', handleCanvasClick);
+    window.addEventListener('keydown', handleKeyPress);
     
     resizeCanvas();
     requestAnimationFrame(loop);
@@ -225,6 +228,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', resizeCanvas);
+  window.removeEventListener('keydown', handleKeyPress);
   if (canvasRef.value) {
     canvasRef.value.removeEventListener('click', handleCanvasClick);
   }
@@ -274,6 +278,26 @@ const handleTowerSell = (towerId: string) => {
   showTowerInfo.value = false;
   selectedTowerForInfo.value = null;
 };
+
+// Pause functionality
+const togglePause = () => {
+  if (!gameState.isGameOver && !gameState.isVictory) {
+    isPaused.value = !isPaused.value;
+    
+    // Play pause/resume sound effect
+    if (isPaused.value) {
+      audioManager.playSFX(SoundEffect.GAME_PAUSE);
+    } else {
+      audioManager.playSFX(SoundEffect.GAME_RESUME);
+    }
+  }
+};
+
+const handleKeyPress = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    togglePause();
+  }
+};
 </script>
 
 <template>
@@ -290,6 +314,15 @@ const handleTowerSell = (towerId: string) => {
       @startNextWave="handleWaveTransitionComplete"
     />
     
+    <!-- Pause Button -->
+    <button 
+      v-if="!gameState.isGameOver && !gameState.isVictory"
+      class="pause-btn" 
+      @click="togglePause" 
+      title="Pause (ESC)">
+      ⏸️ Pause
+    </button>
+
     <div class="ui-overlay" v-if="!gameState.isGameOver && !gameState.isVictory">
       <div class="tower-selection">
         <button 
@@ -355,6 +388,12 @@ const handleTowerSell = (towerId: string) => {
       @close="handleTowerInfoClose"
       @sell="handleTowerSell"
     />
+    
+    <!-- Pause Menu -->
+    <PauseMenu
+      :show="isPaused"
+      @resume="togglePause"
+    />
   </div>
 </template>
 
@@ -380,6 +419,30 @@ const handleTowerSell = (towerId: string) => {
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #00ff00;
+}
+
+.pause-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #00ff00;
+  border: 2px solid #00ff00;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pause-btn:hover {
+  background: rgba(0, 255, 0, 0.2);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
 }
 
 .tower-selection {

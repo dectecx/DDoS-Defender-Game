@@ -237,7 +237,7 @@ Last Updated: 2025-11-22
 **Completed**: 2025-11-23
 
 **Audio Files Available**:
-- SFX: tower_build, tower_sell, tower_fire, tower_levelup, wave_start, wave_complete, wave_continue, wave_pause, boss_appears, game_over
+- SFX: tower_build, tower_sell, tower_fire, tower_levelup, wave_start, wave_complete, game_resume, game_pause, boss_appears, game_over
 - BGM: gameplay, boss_battle, menu
 
 ---

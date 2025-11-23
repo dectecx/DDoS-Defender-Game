@@ -12,8 +12,8 @@ export const SoundEffect = {
   TOWER_LEVEL_UP: 'tower_levelup',
   WAVE_START: 'wave_start',
   WAVE_COMPLETE: 'wave_complete',
-  WAVE_CONTINUE: 'wave_continue',
-  WAVE_PAUSE: 'wave_pause',
+  GAME_RESUME: 'game_resume',
+  GAME_PAUSE: 'game_pause',
   BOSS_APPEARS: 'boss_appears',
   GAME_OVER: 'game_over'
 } as const;
