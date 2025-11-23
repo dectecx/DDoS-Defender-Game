@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import SettingsContent from './SettingsContent.vue';
+import GameGuideContent from './GameGuideContent.vue';
 
 const router = useRouter();
 
@@ -12,21 +14,34 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   resume: [];
-  close: [];
 }>();
 
+// Current view: 'pause' | 'settings' | 'guide'
+const currentView = ref<'pause' | 'settings' | 'guide'>('pause');
 const showQuitConfirm = ref(false);
+
+// Reset to pause view when menu shows
+watch(() => props.show, (newShow) => {
+  if (newShow) {
+    currentView.value = 'pause';
+    showQuitConfirm.value = false;
+  }
+});
 
 const handleResume = () => {
   emit('resume');
 };
 
-const handleSettings = () => {
-  router.push('/settings');
+const showSettings = () => {
+  currentView.value = 'settings';
 };
 
-const handleGuide = () => {
-  router.push('/guide');
+const showGuide = () => {
+  currentView.value = 'guide';
+};
+
+const backToPause = () => {
+  currentView.value = 'pause';
 };
 
 const confirmQuit = () => {
@@ -44,44 +59,56 @@ const quitToMenu = () => {
 
 <template>
   <div v-if="props.show" class="pause-overlay" @click="handleResume">
-    <div class="pause-menu" @click.stop>
-      <!-- Pause Title -->
-      <h1 class="pause-title">Game Paused</h1>
-      
-      <!-- Quit Confirmation -->
-      <div v-if="showQuitConfirm" class="confirm-dialog">
-        <p>Quit to main menu?</p>
-        <p class="warning">⚠️ Current progress will be lost!</p>
-        <div class="confirm-buttons">
-          <button class="menu-btn danger" @click="quitToMenu">
-            Quit
+    <div class="pause-content" @click.stop>
+      <!-- Main Pause Menu -->
+      <div v-if="currentView === 'pause'" class="pause-menu">
+        <h1 class="pause-title">Game Paused</h1>
+        
+        <!-- Quit Confirmation -->
+        <div v-if="showQuitConfirm" class="confirm-dialog">
+          <p>Quit to main menu?</p>
+          <p class="warning">⚠️ Current progress will be lost!</p>
+          <div class="confirm-buttons">
+            <button class="menu-btn danger" @click="quitToMenu">
+              Quit
+            </button>
+            <button class="menu-btn" @click="cancelQuit">
+              Cancel
+            </button>
+          </div>
+        </div>
+        
+        <!-- Normal Menu -->
+        <div v-else class="pause-buttons">
+          <button class="menu-btn primary" @click="handleResume">
+            ▶ Resume Game
           </button>
-          <button class="menu-btn" @click="cancelQuit">
-            Cancel
+          
+          <button class="menu-btn" @click="showSettings">
+            ⚙️ Settings
+          </button>
+          
+          <button class="menu-btn" @click="showGuide">
+            📖 Game Guide
+          </button>
+          
+          <button class="menu-btn danger" @click="confirmQuit">
+            ⬅️ Quit to Menu
           </button>
         </div>
+        
+        <div class="pause-hint">Press ESC to resume</div>
       </div>
       
-      <!-- Normal Menu -->
-      <div v-else class="pause-buttons">
-        <button class="menu-btn primary" @click="handleResume">
-          ▶ Resume Game
-        </button>
-        
-        <button class="menu-btn" @click="handleSettings">
-          ⚙️ Settings
-        </button>
-        
-        <button class="menu-btn" @click="handleGuide">
-          📖 Game Guide
-        </button>
-        
-        <button class="menu-btn danger" @click="confirmQuit">
-          ⬅️ Quit to Menu
-        </button>
+      <!-- Settings View -->
+      <div v-else-if="currentView === 'settings'" class="modal-content">
+        <SettingsContent :in-game="true" @back="backToPause" />
       </div>
       
-      <div class="pause-hint">Press ESC to resume</div>
+      <!-- Guide View -->
+      <div v-else-if="currentView === 'guide'" class="modal-content">
+        <GameGuideContent :in-game="true" @back="backToPause" />
+      </div>
     </div>
   </div>
 </template>
@@ -100,6 +127,8 @@ const quitToMenu = () => {
   justify-content: center;
   z-index: 1000;
   animation: fadeIn 0.3s ease;
+  overflow-y: auto;
+  padding: 20px;
 }
 
 @keyframes fadeIn {
@@ -107,6 +136,21 @@ const quitToMenu = () => {
     opacity: 0;
   }
   to {
+    opacity: 1;
+  }
+}
+
+.pause-content {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }
@@ -121,18 +165,6 @@ const quitToMenu = () => {
   text-align: center;
   max-width: 450px;
   width: 90%;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateY(-30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
 }
 
 .pause-title {
@@ -232,6 +264,20 @@ const quitToMenu = () => {
   flex: 1;
 }
 
+/* Modal Content (Settings/Guide) */
+.modal-content {
+  background: rgba(26, 26, 46, 0.95);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(0, 255, 0, 0.5);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 255, 0, 0.3);
+  max-width: 900px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .pause-menu {
@@ -249,6 +295,10 @@ const quitToMenu = () => {
   
   .menu-btn.primary {
     font-size: 18px;
+  }
+  
+  .modal-content {
+    padding: 30px 20px;
   }
 }
 </style>

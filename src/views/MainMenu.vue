@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { GameActions } from '../game/GameState';
 
 const router = useRouter();
 const showCredits = ref(false);
 const developerName = ref('Dec');
 
 const startGame = () => {
+  GameActions.resetGame();
   router.push('/game');
 };
 

@@ -185,9 +185,6 @@ const loop = (timestamp: number) => {
 
 onMounted(() => {
   if (canvasRef.value) {
-    // Reset game state for fresh start
-    GameActions.resetGame();
-    
     ctx = canvasRef.value.getContext('2d');
     
     // Initialize Systems
