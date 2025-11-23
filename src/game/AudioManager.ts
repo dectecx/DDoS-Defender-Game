@@ -256,6 +256,13 @@ export class AudioManager {
   }
 
   /**
+   * Get all current audio settings
+   */
+  public getSettings(): AudioSettings {
+    return { ...this.settings };
+  }
+
+  /**
    * Load settings from localStorage
    */
   private loadSettings(): void {
