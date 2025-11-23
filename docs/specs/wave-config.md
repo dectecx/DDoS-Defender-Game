@@ -1,4 +1,4 @@
-# Wave Configuration & Design
+# Wave Configuration and Design
 
 ## Overview
 This document defines the wave progression, enemy compositions, and balance for DDoS Defender.

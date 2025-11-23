@@ -87,10 +87,12 @@ src/
 ## 📚 Documentation
 
 - **[Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)** - Detailed phase-by-phase development progress
-- **[Tower Specifications](docs/tower-specs.md)** - Complete tower stats and mechanics
-- **[Enemy Specifications](docs/enemy-specs.md)** - Enemy types and behaviors
-- **[Wave System](docs/wave-system.md)** - Wave configuration and progression
-- **[Buff System](docs/buff-system.md)** - How tower buffs work
+- **[Game Flow & Mechanics](docs/design/game-flow.md)** - How the game works
+- **[Buff System Specification](docs/specs/buff-system.md)** - How tower buffs work
+- **[Enemy Specifications](docs/specs/enemy-stats.md)** - Enemy types and behaviors
+- **[Tower Specifications](docs/specs/tower-stats.md)** - Complete tower stats and mechanics
+- **[Wave Configuration and Design](docs/specs/wave-config.md)** - Wave configuration and progression
+- **[Wave Types and Spawn Schedules](docs/specs/wave-types.md)** - Wave types and spawn schedules
 
 ---
 
