@@ -29,6 +29,10 @@ export class WaveManager {
   isWaveActive: boolean = false;
   isLevelComplete: boolean = false;
   
+  // Wave progress tracking
+  totalEnemiesInWave: number = 0;
+  enemiesSpawned: number = 0;
+  
   // Wave transition state
   isInTransition: boolean = false;
   transitionStartTime: number = 0;
@@ -95,8 +99,12 @@ export class WaveManager {
     this.isWaveActive = false;
     this.isInTransition = false;
     
+    // Calculate total enemies in this wave
+    this.totalEnemiesInWave = this.spawnTrackers.reduce((sum, tracker) => sum + tracker.totalCount, 0);
+    this.enemiesSpawned = 0;
+    
     gameState.wave = this.currentWaveConfig.waveId;
-    console.log(`Wave ${gameState.wave} loaded`);
+    console.log(`Wave ${gameState.wave} loaded with ${this.totalEnemiesInWave} enemies`);
     
     // Start wave immediately (no delay for now, can be added later)
     this.startWave();

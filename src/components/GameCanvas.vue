@@ -13,6 +13,9 @@ import level1 from '../game/levels/level1.json';
 import WaveTransition from './WaveTransition.vue';
 import TowerInfoPanel from './TowerInfoPanel.vue';
 import PauseMenu from './PauseMenu.vue';
+import TopStatusBar from './TopStatusBar.vue';
+import TowerBuildPanel from './TowerBuildPanel.vue';
+import GameOverModal from './GameOverModal.vue';
 import { audioManager, SoundEffect, BackgroundMusic } from '../game/AudioManager';
 import { GameConfig } from '../config/game.config';
 
@@ -33,7 +36,7 @@ let incomeAccumulator = 0; // For passive income accumulation
 let audioStarted = false; // Track if audio has been started (browser autoplay policy)
 
 // UI State
-const selectedTower = ref<TowerType>(TowerType.RATE_LIMIT);
+const selectedTower = ref<TowerType | null>(null);
 const isPaused = ref(false);
 const gameSpeed = ref(1); // Game speed multiplier: 1x, 2x, or 3x
 
@@ -57,6 +60,10 @@ const codeFarmerCost = computed(() => {
 const passiveIncomeRate = computed(() => {
   return codeFarmerCount.value * 5;
 });
+
+// Reactive refs for wave enemy tracking (updated in draw loop)
+const totalEnemiesInWave = ref(0);
+const currentEnemyCount = ref(0);
 
 // Helper to update CODE_FARMER count
 const updateCodeFarmerCount = () => {
@@ -85,6 +92,7 @@ const handleCanvasClick = (event: MouseEvent) => {
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
   
+  if (!selectedTower.value) return;
   const result = interactionManager.handleClick(x, y, selectedTower.value);
   
   if (result) {
@@ -109,6 +117,14 @@ const handleCanvasClick = (event: MouseEvent) => {
 const draw = () => {
   if (!ctx || !canvasRef.value || !gridManager || !enemyManager || !towerManager || !projectileManager) return;
   
+  // Update reactive enemy counts from WaveManager
+  if (waveManager) {
+    totalEnemiesInWave.value = waveManager.totalEnemiesInWave;
+  }
+  if (enemyManager) {
+    currentEnemyCount.value = enemyManager.enemies.length;
+  }
+  
   // Clear screen
   ctx.fillStyle = '#1a1a1a';
   ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height);
@@ -130,14 +146,6 @@ const draw = () => {
     towerManager.drawRangeIndicator(ctx, selectedTowerForInfo.value.id);
   }
   
-  // Draw UI Overlay (Canvas part)
-  ctx.fillStyle = '#00ff00';
-  ctx.font = '20px monospace';
-  ctx.fillText('DDoS Defender - System Online', 20, 40);
-  ctx.fillText(`Wave: ${gameState.wave}`, 20, 70);
-  ctx.fillText(`Enemies: ${enemyManager.enemies.length}`, 20, 100);
-  ctx.fillText(`Money: $${gameState.money}`, 20, 130);
-  ctx.fillText(`HP: ${gameState.hp}%`, 20, 160);
   
   if (gameState.isGameOver) {
     ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
@@ -315,6 +323,12 @@ const setGameSpeed = (speed: number) => {
   localStorage.setItem('gameSpeed', speed.toString());
 };
 
+// Handle restart from Game Over modal
+const handleRestart = () => {
+  // Reload the page to restart game completely
+  window.location.reload();
+};
+
 const handleKeyPress = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     togglePause();
@@ -324,6 +338,20 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
 <template>
   <div class="game-container">
+    <!-- Top Status Bar -->
+    <TopStatusBar
+      v-if="!gameState.isGameOver && !gameState.isVictory"
+      :totalWaves="level1.waves.length"
+      :currentWaveEnemies="currentEnemyCount"
+      :totalWaveEnemies="totalEnemiesInWave"
+      :passiveIncome="passiveIncomeRate"
+      :isPaused="isPaused"
+      :gameSpeed="gameSpeed"
+      @togglePause="togglePause"
+      @setSpeed="setGameSpeed"
+    />
+
+    <!-- Main Canvas -->
     <canvas ref="canvasRef" class="game-canvas"></canvas>
     
     <!-- Wave Transition Overlay -->
@@ -335,95 +363,6 @@ const handleKeyPress = (event: KeyboardEvent) => {
       :timeoutDuration="waveTimeout"
       @startNextWave="handleWaveTransitionComplete"
     />
-    
-    <!-- Speed Control UI -->
-    <div class="speed-control" v-if="!gameState.isGameOver && !gameState.isVictory">
-      <div class="speed-label">Speed:</div>
-      <button 
-        class="speed-btn-game"
-        :class="{ active: gameSpeed === 1 }"
-        @click="setGameSpeed(1)"
-        title="Normal Speed"
-      >1x</button>
-      <button 
-        class="speed-btn-game"
-        :class="{ active: gameSpeed === 2 }"
-        @click="setGameSpeed(2)"
-        title="Double Speed"
-      >2x</button>
-      <button 
-        class="speed-btn-game"
-        :class="{ active: gameSpeed === 3 }"
-        @click="setGameSpeed(3)"
-        title="Triple Speed"
-      >3x</button>
-    </div>
-    
-    <!-- Pause Button -->
-    <button 
-      v-if="!gameState.isGameOver && !gameState.isVictory"
-      class="pause-btn" 
-      @click="togglePause" 
-      title="Pause (ESC)">
-      ⏸️ Pause
-    </button>
-
-    <div class="ui-overlay" v-if="!gameState.isGameOver && !gameState.isVictory">
-      <div class="tower-selection">
-        <button 
-          :class="{ active: selectedTower === TowerType.RATE_LIMIT }"
-          @click="selectedTower = TowerType.RATE_LIMIT"
-        >
-          Rate Limit ($100)
-        </button>
-        <button 
-          :class="{ active: selectedTower === TowerType.WAF }"
-          @click="selectedTower = TowerType.WAF"
-        >
-          WAF ($200)
-        </button>
-        <button 
-          :class="{ active: selectedTower === TowerType.DPI }"
-          @click="selectedTower = TowerType.DPI"
-        >
-          DPI ($300)
-        </button>
-        <button 
-          :class="{ active: selectedTower === TowerType.CACHE }"
-          @click="selectedTower = TowerType.CACHE"
-        >
-          Cache ($150)
-        </button>
-      </div>
-      <div class="tower-selection" style="margin-top: 10px;">
-        <button 
-          :class="{ active: selectedTower === TowerType.CODE_FARMER }"
-          @click="selectedTower = TowerType.CODE_FARMER"
-          class="buff-tower"
-        >
-          💰 Farmer (${{ codeFarmerCost }})
-        </button>
-        <button 
-          :class="{ active: selectedTower === TowerType.SUPERVISOR }"
-          @click="selectedTower = TowerType.SUPERVISOR"
-          class="buff-tower"
-        >
-          ⚡ Supervisor ($300)
-        </button>
-        <button 
-          :class="{ active: selectedTower === TowerType.SYSTEM_ANALYST }"
-          @click="selectedTower = TowerType.SYSTEM_ANALYST"
-          class="buff-tower"
-        >
-          🎯 Analyst ($350)
-        </button>
-      </div>
-      
-      <!-- Passive Income Display -->
-      <div v-if="passiveIncomeRate > 0" class="income-display">
-        💰 Passive Income: +{{ passiveIncomeRate }}g/sec
-      </div>
-    </div>
     
     <!-- Tower Info Panel -->
     <TowerInfoPanel
@@ -438,6 +377,23 @@ const handleKeyPress = (event: KeyboardEvent) => {
     <PauseMenu
       :show="isPaused"
       @resume="togglePause"
+    />
+    
+    <!-- Game Over Modal -->
+    <GameOverModal
+      :show="gameState.isGameOver || gameState.isVictory"
+      :isVictory="gameState.isVictory"
+      :wave="gameState.wave"
+      :score="gameState.money"
+      @restart="handleRestart"
+    />
+    
+    <!-- Tower Build Panel -->
+    <TowerBuildPanel
+      v-if="!gameState.isGameOver && !gameState.isVictory"
+      :selectedTower="selectedTower"
+      :codeFarmerCost="codeFarmerCost"
+      @selectTower="selectedTower = $event"
     />
   </div>
 </template>
