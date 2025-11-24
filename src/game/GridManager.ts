@@ -23,7 +23,7 @@ export class GridManager {
 
   /**
    * Initialize the grid with map layout
-   * @param mapLayout 2D array where 1 = PATH, 0 = EMPTY
+   * @param mapLayout 2D array where 0 = EMPTY, 1 = PATH, 2 = BLOCKED
    */
   initialize(mapLayout?: number[][]) {
     this.grid = [];
@@ -35,7 +35,15 @@ export class GridManager {
     for (let y = 0; y < this.height; y++) {
       const row: Cell[] = [];
       for (let x = 0; x < this.width; x++) {
-        const cellType = layout[y]?.[x] === 1 ? CellType.PATH : CellType.EMPTY;
+        const value = layout[y]?.[x];
+        let cellType: CellType = CellType.EMPTY;
+        
+        if (value === 1) {
+          cellType = CellType.PATH;
+        } else if (value === 2) {
+          cellType = CellType.BLOCKED;
+        }
+        
         row.push({
           x,
           y,
@@ -94,6 +102,22 @@ export class GridManager {
         } else if (cell.type === CellType.WALL) {
           ctx.fillStyle = '#444';
           ctx.fillRect(posX, posY, this.cellSize, this.cellSize);
+        } else if (cell.type === CellType.BLOCKED) {
+          // Blocked cells: dark with diagonal lines
+          ctx.fillStyle = '#1a1a1a';
+          ctx.fillRect(posX, posY, this.cellSize, this.cellSize);
+          
+          // Draw diagonal lines for visual distinction
+          ctx.save();
+          ctx.strokeStyle = '#333';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(posX, posY);
+          ctx.lineTo(posX + this.cellSize, posY + this.cellSize);
+          ctx.moveTo(posX + this.cellSize, posY);
+          ctx.lineTo(posX, posY + this.cellSize);
+          ctx.stroke();
+          ctx.restore();
         }
 
         // Draw Grid Lines
@@ -113,6 +137,7 @@ export class GridManager {
       case CellType.PATH: return '#3a3a3a'; // Slightly lighter path
       case CellType.WALL: return '#111';
       case CellType.TOWER: return '#444';
+      case CellType.BLOCKED: return '#1a1a1a'; // Very dark for obstacles
       default: return '#000';
     }
   }

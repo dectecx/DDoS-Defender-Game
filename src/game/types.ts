@@ -2,7 +2,8 @@ export const CellType = {
   EMPTY: 'EMPTY',
   WALL: 'WALL',
   PATH: 'PATH',
-  TOWER: 'TOWER'
+  TOWER: 'TOWER',
+  BLOCKED: 'BLOCKED'  // Obstacle cells (cannot build towers)
 } as const;
 
 export type CellType = typeof CellType[keyof typeof CellType];
