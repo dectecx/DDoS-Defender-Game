@@ -210,4 +210,67 @@ export class GridManager {
       }
     }
   }
+
+  /**
+   * Draw spawn and base markers at path endpoints
+   * @param ctx Canvas rendering context
+   * @param timestamp Current timestamp for animations
+   */
+  drawPathMarkers(ctx: CanvasRenderingContext2D, timestamp: number) {
+    if (this.pathCoordinates.length === 0) return;
+    
+    const spawnPos = this.pathCoordinates[0]!;  // Safe: checked length > 0
+    const basePos = this.pathCoordinates[this.pathCoordinates.length - 1]!;
+    
+    // Pulsing animation (0.75 to 1.0 scale)
+    const pulseScale = 0.95 + Math.sin(timestamp * 0.003) * 0.05;
+    
+    // Draw Spawn Marker (red/orange - where enemies appear)
+    this.drawMarker(ctx, spawnPos, '#ff4444', 'SPAWN', pulseScale);
+    
+    // Draw Base Marker (cyan/green - what we're protecting)
+    this.drawMarker(ctx, basePos, '#00ff88', 'BASE', pulseScale);
+  }
+
+  /**
+   * Draw a marker at a grid position
+   * @param ctx Canvas rendering context
+   * @param gridPos Grid position
+   * @param color Marker color
+   * @param label Text label
+   * @param scale Animation scale factor
+   */
+  private drawMarker(
+    ctx: CanvasRenderingContext2D, 
+    gridPos: Position, 
+    color: string, 
+    label: string, 
+    scale: number
+  ) {
+    const centerX = (gridPos.x * this.cellSize) + (this.cellSize / 2);
+    const centerY = (gridPos.y * this.cellSize) + (this.cellSize / 2);
+    const radius = (this.cellSize / 3) * scale;
+    
+    // Outer glow
+    ctx.save();
+    ctx.globalAlpha = 0.3 * scale;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    
+    // Inner circle
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Label text
+    ctx.fillStyle = '#000';
+    ctx.font = `bold ${Math.floor(this.cellSize / 5)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, centerX, centerY);
+  }
 }

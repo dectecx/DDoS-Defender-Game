@@ -115,6 +115,12 @@ const draw = () => {
   
   // Draw Systems
   gridManager.draw(ctx);
+  
+  // Draw path markers (spawn and base indicators)
+  if (gridManager) {
+    gridManager.drawPathMarkers(ctx, performance.now());
+  }
+  
   towerManager.draw(ctx);
   enemyManager.draw(ctx);
   projectileManager.draw(ctx);
