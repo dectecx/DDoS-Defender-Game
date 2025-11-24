@@ -35,6 +35,7 @@ let audioStarted = false; // Track if audio has been started (browser autoplay p
 // UI State
 const selectedTower = ref<TowerType>(TowerType.RATE_LIMIT);
 const isPaused = ref(false);
+const gameSpeed = ref(1); // Game speed multiplier: 1x, 2x, or 3x
 
 // Wave Transition State
 const showWaveTransition = ref(false);
@@ -157,17 +158,20 @@ const loop = (timestamp: number) => {
   lastTime = timestamp;
 
   if (!gameState.isGameOver && !gameState.isVictory && !isPaused.value) {
-    // Update game systems
-    if (waveManager) waveManager.update(deltaTime);
-    if (enemyManager) enemyManager.update(deltaTime);
-    if (projectileManager) projectileManager.update(deltaTime);
+    // Apply game speed multiplier to deltaTime
+    const adjustedDeltaTime = deltaTime * gameSpeed.value;
+    
+    // Update game systems with adjusted deltaTime
+    if (waveManager) waveManager.update(adjustedDeltaTime);
+    if (enemyManager) enemyManager.update(adjustedDeltaTime);
+    if (projectileManager) projectileManager.update(adjustedDeltaTime);
     if (towerManager) {
-      towerManager.update(deltaTime, timestamp);
+      towerManager.update(adjustedDeltaTime, timestamp);
       
       // CODE_FARMER passive income (accumulate to handle fractional gold per frame)
       const passiveIncomePerSec = towerManager.buffSystem.getPassiveIncome();
       if (passiveIncomePerSec > 0) {
-        incomeAccumulator += passiveIncomePerSec * deltaTime;
+        incomeAccumulator += passiveIncomePerSec * adjustedDeltaTime;
         
         // Award whole gold amounts
         const goldToAdd = Math.floor(incomeAccumulator);
@@ -184,6 +188,12 @@ const loop = (timestamp: number) => {
 };
 
 onMounted(() => {
+  // Load game speed from localStorage
+  const savedSpeed = localStorage.getItem('gameSpeed');
+  if (savedSpeed) {
+    gameSpeed.value = parseInt(savedSpeed);
+  }
+  
   if (canvasRef.value) {
     ctx = canvasRef.value.getContext('2d');
     
@@ -293,6 +303,12 @@ const togglePause = () => {
   }
 };
 
+// Game speed control
+const setGameSpeed = (speed: number) => {
+  gameSpeed.value = speed;
+  localStorage.setItem('gameSpeed', speed.toString());
+};
+
 const handleKeyPress = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
     togglePause();
@@ -313,6 +329,29 @@ const handleKeyPress = (event: KeyboardEvent) => {
       :timeoutDuration="waveTimeout"
       @startNextWave="handleWaveTransitionComplete"
     />
+    
+    <!-- Speed Control UI -->
+    <div class="speed-control" v-if="!gameState.isGameOver && !gameState.isVictory">
+      <div class="speed-label">Speed:</div>
+      <button 
+        class="speed-btn-game"
+        :class="{ active: gameSpeed === 1 }"
+        @click="setGameSpeed(1)"
+        title="Normal Speed"
+      >1x</button>
+      <button 
+        class="speed-btn-game"
+        :class="{ active: gameSpeed === 2 }"
+        @click="setGameSpeed(2)"
+        title="Double Speed"
+      >2x</button>
+      <button 
+        class="speed-btn-game"
+        :class="{ active: gameSpeed === 3 }"
+        @click="setGameSpeed(3)"
+        title="Triple Speed"
+      >3x</button>
+    </div>
     
     <!-- Pause Button -->
     <button 
@@ -490,5 +529,51 @@ button.active {
   font-family: monospace;
   font-weight: bold;
   text-align: center;
+}
+
+.speed-control {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.speed-label {
+  font-family: monospace;
+  color: #00d4ff;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.speed-btn-game {
+  background: rgba(0, 212, 255, 0.1);
+  color: #00d4ff;
+  border: 2px solid #00d4ff;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  min-width: 40px;
+}
+
+.speed-btn-game:hover {
+  background: rgba(0, 212, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.speed-btn-game.active {
+  background: #00d4ff;
+  color: #000;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
 }
 </style>
