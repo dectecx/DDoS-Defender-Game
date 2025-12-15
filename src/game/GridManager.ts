@@ -1,5 +1,6 @@
 import { CellType } from './types';
 import type { Cell, GridConfig, Position } from './types';
+import { Pathfinder } from './systems/Pathfinder';
 
 /**
  * GridManager - Grid and map manager
@@ -12,13 +13,14 @@ export class GridManager {
   grid: Cell[][];
   
   private pathCoordinates: Position[] = [];
+  private pathfinder: Pathfinder;
 
   constructor(config: GridConfig) {
     this.width = config.width;
     this.height = config.height;
     this.cellSize = config.cellSize;
     this.grid = [];
-    // Initialize will be called externally with mapLayout
+    this.pathfinder = new Pathfinder();
   }
 
   /**
@@ -32,49 +34,71 @@ export class GridManager {
     // Default layout if none provided (Fallback)
     const layout = mapLayout || Array(this.height).fill(0).map(() => Array(this.width).fill(0));
 
+    // First pass: build the grid and find start/end positions
+    let startPos: Position | null = null;
+    let endPos: Position | null = null;
+
     for (let y = 0; y < this.height; y++) {
       const row: Cell[] = [];
       for (let x = 0; x < this.width; x++) {
         const value = layout[y]?.[x];
         let cellType: CellType = CellType.EMPTY;
-        
+
         if (value === 1) {
           cellType = CellType.PATH;
+
+          // Track potential start (leftmost path cell)
+          if (startPos === null || x < startPos.x || (x === startPos.x && y < startPos.y)) {
+            // Check if this is an edge cell (potential entry point)
+            if (x === 0 || y === 0 || x === this.width - 1 || y === this.height - 1) {
+              startPos = { x, y };
+            }
+          }
+
+          // Track potential end (rightmost path cell)
+          if (endPos === null || x > endPos.x || (x === endPos.x && y > endPos.y)) {
+            // Check if this is an edge cell (potential exit point)
+            if (x === 0 || y === 0 || x === this.width - 1 || y === this.height - 1) {
+              endPos = { x, y };
+            }
+          }
         } else if (value === 2) {
           cellType = CellType.BLOCKED;
         }
-        
+
         row.push({
           x,
           y,
           type: cellType,
           towerId: null
         });
-
-        if (cellType === CellType.PATH) {
-            this.pathCoordinates.push({ x, y });
-        }
       }
       this.grid.push(row);
     }
-    
-    // HACK: The JSON layout doesn't guarantee order for the path array.
-    // For MVP, we'll use the hardcoded path coordinates to ensure enemies move correctly,
-    // but we'll use the JSON layout for visual rendering.
-    // This assumes the JSON layout visually matches the hardcoded path.
-    
-    const hardcodedPath = [
-        {x:0, y:2}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2},
-        {x:4, y:3}, {x:4, y:4},
-        {x:5, y:4}, {x:6, y:4}, {x:7, y:4}, {x:8, y:4}, {x:9, y:4},
-        {x:9, y:5}, {x:9, y:6},
-        {x:10, y:6}, {x:11, y:6}, {x:12, y:6},
-        {x:12, y:7}, {x:12, y:8},
-        {x:13, y:8}, {x:14, y:8}, {x:15, y:8}, {x:16, y:8}, {x:17, y:8}, {x:18, y:8}, {x:19, y:8}
-    ];
-    
-    this.pathCoordinates = hardcodedPath;
+
+    // Use A* pathfinding to calculate the path
+    if (startPos && endPos) {
+      console.log(`Pathfinding from (${startPos.x}, ${startPos.y}) to (${endPos.x}, ${endPos.y})`);
+      this.pathCoordinates = this.pathfinder.findPath(startPos, endPos, this.grid);
+      console.log(`Path calculated: ${this.pathCoordinates.length} nodes`);
+    } else {
+      console.error('Could not determine start/end positions from map layout');
+    }
   }
+
+  /**
+   * Recalculate path (for future dynamic path support when towers block the path)
+   */
+  recalculatePath(): Position[] {
+    if (this.pathCoordinates.length < 2) return [];
+
+    const start = this.pathCoordinates[0]!;
+    const end = this.pathCoordinates[this.pathCoordinates.length - 1]!;
+
+    this.pathCoordinates = this.pathfinder.findPath(start, end, this.grid);
+    return this.pathCoordinates;
+  }
+
 
   /**
    * Draw the grid

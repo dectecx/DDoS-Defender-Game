@@ -81,25 +81,25 @@ const resizeCanvas = () => {
 
 const handleCanvasClick = (event: MouseEvent) => {
   if (!interactionManager || !canvasRef.value || !towerManager) return;
-  
+
   // Start audio on first user interaction (browser autoplay policy)
   if (!audioStarted) {
     audioManager.playBGM(BackgroundMusic.GAMEPLAY);
     audioStarted = true;
   }
-  
+
   const rect = canvasRef.value.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
-  
+
   if (!selectedTower.value) return;
   const result = interactionManager.handleClick(x, y, selectedTower.value);
-  
+
   if (result) {
     if (result.action === 'BUILD') {
       towerManager.addTower(result.x, result.y, result.type);
       audioManager.playSFX(SoundEffect.TOWER_BUILD);
-      
+
       // Update CODE_FARMER count for dynamic UI
       if (result.type === TowerType.CODE_FARMER) {
         updateCodeFarmerCount();
@@ -116,7 +116,7 @@ const handleCanvasClick = (event: MouseEvent) => {
 
 const draw = () => {
   if (!ctx || !canvasRef.value || !gridManager || !enemyManager || !towerManager || !projectileManager) return;
-  
+
   // Update reactive enemy counts from WaveManager
   if (waveManager) {
     totalEnemiesInWave.value = waveManager.totalEnemiesInWave;
@@ -124,29 +124,28 @@ const draw = () => {
   if (enemyManager) {
     currentEnemyCount.value = enemyManager.enemies.length;
   }
-  
+
   // Clear screen
   ctx.fillStyle = '#1a1a1a';
   ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height);
-  
+
   // Draw Systems
   gridManager.draw(ctx);
-  
+
   // Draw path markers (spawn and base indicators)
   if (gridManager) {
     gridManager.drawPathMarkers(ctx, performance.now());
   }
-  
+
   towerManager.draw(ctx);
   enemyManager.draw(ctx);
   projectileManager.draw(ctx);
-  
+
   // Draw range indicator for selected tower
   if (selectedTowerForInfo.value) {
     towerManager.drawRangeIndicator(ctx, selectedTowerForInfo.value.id);
   }
-  
-  
+
   if (gameState.isGameOver) {
     ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
     ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height);
@@ -174,19 +173,19 @@ const loop = (timestamp: number) => {
   if (!gameState.isGameOver && !gameState.isVictory && !isPaused.value) {
     // Apply game speed multiplier to deltaTime
     const adjustedDeltaTime = deltaTime * gameSpeed.value;
-    
+
     // Update game systems with adjusted deltaTime
     if (waveManager) waveManager.update(adjustedDeltaTime);
     if (enemyManager) enemyManager.update(adjustedDeltaTime);
     if (projectileManager) projectileManager.update(adjustedDeltaTime);
     if (towerManager) {
       towerManager.update(adjustedDeltaTime, timestamp);
-      
+
       // CODE_FARMER passive income (accumulate to handle fractional gold per frame)
       const passiveIncomePerSec = towerManager.buffSystem.getPassiveIncome();
       if (passiveIncomePerSec > 0) {
         incomeAccumulator += passiveIncomePerSec * adjustedDeltaTime;
-        
+
         // Award whole gold amounts
         const goldToAdd = Math.floor(incomeAccumulator);
         if (goldToAdd > 0) {
@@ -207,10 +206,10 @@ onMounted(() => {
   if (savedSpeed) {
     gameSpeed.value = parseInt(savedSpeed);
   }
-  
+
   if (canvasRef.value) {
     ctx = canvasRef.value.getContext('2d');
-    
+
     // Initialize Systems
     gridManager = new GridManager({ 
       width: GameConfig.grid.width, 
@@ -226,10 +225,10 @@ onMounted(() => {
 
     // Set up circular dependencies (let EnemyManager access TowerManager for Boss skill)
     enemyManager.setTowerManager(towerManager);
-    
+
     // Set up ProjectileManager -> TowerManager for experience awards
     projectileManager.setTowerManager(towerManager);
-    
+
     // Set up InteractionManager -> TowerManager for dynamic costs
     interactionManager.setTowerManager(towerManager);
 
@@ -244,7 +243,7 @@ onMounted(() => {
     window.addEventListener('resize', resizeCanvas);
     canvasRef.value.addEventListener('click', handleCanvasClick);
     window.addEventListener('keydown', handleKeyPress);
-    
+
     resizeCanvas();
     requestAnimationFrame(loop);
   }
@@ -283,22 +282,22 @@ const handleTowerInfoClose = () => {
  */
 const handleTowerSell = (towerId: string) => {
   if (!towerManager) return;
-  
+
   const tower = towerManager.towers.find(t => t.id === towerId);
   const wasFarmer = tower?.type === TowerType.CODE_FARMER;
-  
+
   const refund = towerManager.sellTower(towerId);
   if (refund > 0) {
     GameActions.addMoney(refund);
     audioManager.playSFX(SoundEffect.TOWER_SELL);
     console.log(`Tower sold for ${refund}g`);
-    
+
     // Update CODE_FARMER count for dynamic UI
     if (wasFarmer) {
       updateCodeFarmerCount();
     }
   }
-  
+
   showTowerInfo.value = false;
   selectedTowerForInfo.value = null;
 };
@@ -307,7 +306,7 @@ const handleTowerSell = (towerId: string) => {
 const togglePause = () => {
   if (!gameState.isGameOver && !gameState.isVictory) {
     isPaused.value = !isPaused.value;
-    
+
     // Play pause/resume sound effect
     if (isPaused.value) {
       audioManager.playSFX(SoundEffect.GAME_PAUSE);
@@ -353,9 +352,9 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
     <!-- Main Canvas -->
     <canvas ref="canvasRef" class="game-canvas"></canvas>
-    
+
     <!-- Wave Transition Overlay -->
-    <WaveTransition 
+    <WaveTransition
       :show="showWaveTransition"
       :completedWave="completedWaveNum"
       :baseGold="currentWaveRewards.baseGold"
@@ -363,7 +362,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
       :timeoutDuration="waveTimeout"
       @startNextWave="handleWaveTransitionComplete"
     />
-    
+
     <!-- Tower Info Panel -->
     <TowerInfoPanel
       :show="showTowerInfo"
@@ -372,13 +371,13 @@ const handleKeyPress = (event: KeyboardEvent) => {
       @close="handleTowerInfoClose"
       @sell="handleTowerSell"
     />
-    
+
     <!-- Pause Menu -->
     <PauseMenu
       :show="isPaused"
       @resume="togglePause"
     />
-    
+
     <!-- Game Over Modal -->
     <GameOverModal
       :show="gameState.isGameOver || gameState.isVictory"
@@ -387,7 +386,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
       :score="gameState.money"
       @restart="handleRestart"
     />
-    
+
     <!-- Tower Build Panel -->
     <TowerBuildPanel
       v-if="!gameState.isGameOver && !gameState.isVictory"
