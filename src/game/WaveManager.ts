@@ -196,7 +196,7 @@ export class WaveManager {
   private processIntervalSpawn(tracker: SpawnTracker, elapsedTime: number) {
     const schedule = tracker.schedule as IntervalSpawnSchedule;
     const expectedSpawns = Math.floor(elapsedTime / schedule.interval);
-    
+
     while (tracker.spawnedCount < expectedSpawns && tracker.spawnedCount < tracker.totalCount) {
       this.spawnEnemy(tracker.enemyType);
       tracker.spawnedCount++;
@@ -208,11 +208,11 @@ export class WaveManager {
    */
   private processBurstSpawn(tracker: SpawnTracker, elapsedTime: number) {
     const schedule = tracker.schedule as BurstSpawnSchedule;
-    
+
     schedule.bursts.forEach(burst => {
       if (elapsedTime >= burst.time && tracker.spawnedCount < tracker.totalCount) {
         const spawnCount = Math.min(burst.count, tracker.totalCount - tracker.spawnedCount);
-        
+
         for (let i = 0; i < spawnCount; i++) {
           this.spawnEnemy(tracker.enemyType);
           tracker.spawnedCount++;
@@ -226,8 +226,8 @@ export class WaveManager {
    */
   private processCustomSpawn(tracker: SpawnTracker, elapsedTime: number) {
     const schedule = tracker.schedule as CustomSpawnSchedule;
-    
-    while (tracker.spawnedCount < schedule.times.length && 
+
+    while (tracker.spawnedCount < schedule.times.length &&
            elapsedTime >= schedule.times[tracker.spawnedCount]!) {
       this.spawnEnemy(tracker.enemyType);
       tracker.spawnedCount++;
@@ -239,8 +239,8 @@ export class WaveManager {
    */
   private processRandomSpawn(tracker: SpawnTracker, elapsedTime: number) {
     if (!tracker.randomTimes) return;
-    
-    while (tracker.spawnedCount < tracker.randomTimes.length && 
+
+    while (tracker.spawnedCount < tracker.randomTimes.length &&
            elapsedTime >= tracker.randomTimes[tracker.spawnedCount]!) {
      this.spawnEnemy(tracker.enemyType);
       tracker.spawnedCount++;
@@ -261,7 +261,7 @@ export class WaveManager {
     if (!this.currentWaveConfig) return;
 
     console.log(`=== Wave ${this.currentWaveConfig.waveId} Completing ===`);
-    
+
     this.isWaveActive = false;
     this.isInTransition = true;
     this.transitionStartTime = Date.now();
@@ -280,7 +280,7 @@ export class WaveManager {
     // Trigger transition UI
     console.log(`Triggering wave transition UI callback...`);
     console.log(`Callback exists: ${!!this.onWaveTransitionStart}`);
-    
+
     if (this.onWaveTransitionStart) {
       this.onWaveTransitionStart(
         this.currentWaveConfig.waveId,
