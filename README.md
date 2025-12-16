@@ -2,8 +2,8 @@
 
 A cybersecurity-themed tower defense game built with **Vue 3**, **TypeScript**, and **HTML5 Canvas**.
 
-> **Current Version**: 0.8.5 (Phase 11 - UI/UX Complete)  
-> **Status**: Feature-complete gameplay with professional UI/UX system
+> **Current Version**: 0.9.0 (Phase 14 - Testing Complete)  
+> **Status**: Feature-complete gameplay with A* pathfinding and unit testing
 
 ---
 
@@ -105,6 +105,8 @@ src/
 - **Build Tool**: Vite
 - **State Management**: Vue Reactive (lightweight)
 - **Audio**: Web Audio API with custom AudioManager
+- **Pathfinding**: A* Algorithm
+- **Testing**: Vitest + happy-dom (67 unit tests)
 
 ---
 
@@ -118,11 +120,13 @@ src/
 - **Phase 11**: UI/UX improvements (main menu, pause, settings, guide)
 - **Phase 12**: Audio system (BGM, SFX, volume controls)
 - **Phase 13**: Configuration management
+- **Phase 14**: Testing framework (Vitest, 67 unit tests)
+- **A* Pathfinding**: Dynamic enemy pathing system
 
 ### 🚧 Upcoming
-- **Game Speed Control**: Implement speed multiplier in game loop
 - **Phase 10**: Grid enhancements (blocked cells, spawn markers)
-- **Phase 14**: Testing & QA setup
+- **Phase 15**: Advanced pathfinding (dynamic tower blocking)
+- **Phase 16**: More enemy types and abilities
 
 See [DEVELOPMENT_ROADMAP.md](docs/DEVELOPMENT_ROADMAP.md) for detailed progress tracking.
 

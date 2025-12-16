@@ -1,8 +1,8 @@
 # DDoS Defender - Development Roadmap
 
-## Current Version: 0.8.5 (Phase 11 - UI/UX Complete)
+## Current Version: 0.9.0 (Phase 14 - Testing Complete)
 
-**Last Updated**: 2025-11-24
+**Last Updated**: 2025-12-16
 
 ---
 
@@ -13,6 +13,24 @@ DDoS Defender is a tower defense game with a cybersecurity theme, built using Vu
 ---
 
 ## Recent Updates
+
+### Phase 14: Testing & Quality Assurance (Complete) ✅
+- ✅ **Vitest Setup**: Testing framework with happy-dom environment
+- ✅ **Unit Tests**: 67 tests covering core game systems
+  - Pathfinder: 8 tests (A* algorithm validation)
+  - GameState: 13 tests (with vi.hoisted() mock pattern)
+  - BuffSystem: 13 tests  
+  - GridManager: 13 tests
+  - ExperienceSystem: 18 tests
+- ✅ **Mock Pattern**: Using vi.hoisted() for clean test isolation
+- ✅ **Test Commands**: `npm run test` (watch) / `npm run test:run`
+
+### A* Pathfinding System (Complete) ✅
+- ✅ **Pathfinder.ts**: A* algorithm with Manhattan distance heuristic
+- ✅ **Dynamic Pathing**: Enemies follow calculated path from mapLayout
+- ✅ **Auto-Detection**: Start/end positions detected from edge PATH cells
+- ✅ **Future Ready**: `recalculatePath()` method for dynamic tower blocking
+- ✅ **Removed**: Hardcoded path from GridManager
 
 ### Phase 11: UI/UX Improvements (100% Complete) ✅
 - ✅ **Main Menu**: Cyberpunk-themed landing page with animations
@@ -377,45 +395,78 @@ Enhance the player experience with a professional UI/UX system including menu, p
 
 ---
 
-### Phase 14: Testing & Quality Assurance 🚧
+### Phase 14: Testing & Quality Assurance ✅
 **Priority**: Ongoing  
 **Estimated Duration**: Throughout development  
-**Status**: Setup Required
+**Status**: Complete ✅
 
-#### Tasks
-- [ ] Testing Setup
-  - [ ] Install Vitest
-  - [ ] Configure vitest.config.ts
-  - [ ] Setup test utilities
+#### Completed Tasks ✅
+- [x] Testing Setup
+  - [x] Install Vitest + @vue/test-utils + happy-dom
+  - [x] Configure vitest.config.ts
+  - [x] Add test scripts to package.json
   
-- [ ] Unit Tests
-  - [ ] GridManager tests
-  - [ ] TowerManager tests
-  - [ ] WaveManager tests
-  - [ ] ExperienceSystem tests
-  - [ ] BuffSystem tests
-  
+- [x] Unit Tests (67 total)
+  - [x] Pathfinder tests (8) - A* algorithm validation
+  - [x] GameState tests (13) - State management with vi.hoisted() mocks
+  - [x] BuffSystem tests (13) - Buff application and stacking
+  - [x] GridManager tests (13) - Grid operations and coordinate conversion
+  - [x] ExperienceSystem tests (18) - Leveling and stat progression
+
+- [x] Mock Patterns
+  - [x] vi.hoisted() for mock config isolation
+  - [x] beforeEach() reset pattern
+
+#### Pending 📋
 - [ ] Integration Tests
   - [ ] Tower placement flow
   - [ ] Wave transition flow
   - [ ] Experience gain flow
   
-- [ ] TDD Approach (for new features)
-  - [ ] Write tests first
-  - [ ] Implement minimal code
-  - [ ] Refactor
-  
 - [ ] Code Coverage
   - [ ] Target: 80%+ coverage
   - [ ] Setup coverage reporting
-  - [ ] Review uncovered code
 
-**Dependencies**: None  
+**Completed**: 2025-12-16
+
+---
+
+### Phase 15: Advanced Pathfinding 📋
+**Priority**: Medium  
+**Estimated Duration**: 2-3 days  
+**Status**: Ready to Start
+
+#### Tasks
+- [ ] Dynamic Path Recalculation
+  - [ ] Recalculate path when tower placed
+  - [ ] Block placement if would seal off path
+  - [ ] Path preview before tower placement
+  
+- [ ] Open Map Mode (Optional)
+  - [ ] Allow building on any empty cell
+  - [ ] Enemies find shortest path around towers
+  - [ ] "Maze building" gameplay style
+
+**Dependencies**: Phase 14 (Testing)  
 **Blocked By**: None
 
 ---
 
 ## Change Log
+
+### 2025-12-16
+- ✅ Completed Phase 14 (Testing & QA)
+  - ✅ Vitest framework with happy-dom
+  - ✅ 67 unit tests for core systems
+  - ✅ vi.hoisted() mock pattern for config isolation
+- ✅ Implemented A* Pathfinding
+  - ✅ Pathfinder.ts with Manhattan distance heuristic
+  - ✅ Dynamic path calculation from mapLayout
+  - ✅ Removed hardcoded path from GridManager
+  - ✅ Auto-detection of start/end positions
+  - ✅ recalculatePath() for future dynamic blocking
+- ✅ Fixed enemy pathing bug (enemies no longer walk through walls)
+- ✅ Fixed TopStatusBar overlap with game canvas
 
 ### 2025-11-24
 - ✅ Completed Phase 11 (UI/UX Improvements)
@@ -456,9 +507,9 @@ Enhance the player experience with a professional UI/UX system including menu, p
 - Replayability through wave variety
 
 ### Deferred Features
-- Game speed control implementation (from Phase 11)
 - Grid system enhancements (Phase 10)
 - New enemy types (from Phase 9)
+- Dynamic path blocking with towers (Phase 15)
 - Save/Load system (post-launch)
 - Multiplayer (post-launch)
 - Multiple maps (post-launch)
